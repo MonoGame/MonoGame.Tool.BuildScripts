@@ -12,5 +12,6 @@ public class TestToolTask : FrostingTask { }
 
 [TaskName("Default")]
 [IsDependentOn(typeof(BuildToolTask))]
+[IsDependentOn(typeof(PublishToolTask))]
 [IsDependentOn(typeof(TestToolTask))]
 public class DefaultTask : FrostingTask { }

@@ -2,9 +2,9 @@ using System.Runtime.InteropServices;
 
 namespace BuildScripts;
 
-[TaskName("Publish Library")]
+[TaskName("Publish Tool")]
 [IsDependentOn(typeof(PrepTask))]
-public sealed class PublishLibraryTask : AsyncFrostingTask<BuildContext>
+public sealed class PublishToolTask : AsyncFrostingTask<BuildContext>
 {
     public override bool ShouldRun(BuildContext context) => context.BuildSystem().IsRunningOnGitHubActions;
 
