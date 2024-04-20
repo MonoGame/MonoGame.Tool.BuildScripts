@@ -1,7 +1,7 @@
 <Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
-    <TargetFramework>netstandard2.0</TargetFramework>
+    <TargetFramework>net8.0</TargetFramework>
     <NoWarn>NU5128</NoWarn>
     <Title>MonoGame build of {X} Tool</Title>
     <Description>This package contains an {X} tool built for distributing MonoGame games.</Description>
