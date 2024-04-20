@@ -9,6 +9,8 @@
     <IncludeBuildOutput>false</IncludeBuildOutput>
     <PackageLicenseFile>{LicenceName}</PackageLicenseFile>
     <EnableDefaultItems>false</EnableDefaultItems>
+    <PackAsTool>true</PackAsTool>
+    <ToolCommandName>{CommandName}</ToolCommandName>
   </PropertyGroup>
 
   <ItemGroup>
