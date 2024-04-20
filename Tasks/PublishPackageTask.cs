@@ -54,7 +54,7 @@ public sealed class PublishPackageTask : AsyncFrostingTask<BuildContext>
 
         // Generate Project
         var projectData = await ReadEmbeddedResourceAsync("MonoGame.Library.X.txt");
-        projectData = projectData.Replace("{X}", context.PackContext.LibraryName);
+        projectData = projectData.Replace("{X}", context.PackContext.ToolName);
         projectData = projectData.Replace("{LicencePath}", context.PackContext.LicensePath);
 
         if (context.PackContext.LicensePath.EndsWith(".txt"))
@@ -68,7 +68,7 @@ public sealed class PublishPackageTask : AsyncFrostingTask<BuildContext>
             select $"<Content Include=\"{filePath}\"><PackagePath>runtimes/{rid}/native</PackagePath></Content>";
         projectData = projectData.Replace("{LibrariesToInclude}", string.Join(Environment.NewLine, librariesToInclude));
 
-        await File.WriteAllTextAsync($"MonoGame.Library.{context.PackContext.LibraryName}.csproj", projectData);
+        await File.WriteAllTextAsync($"MonoGame.Library.{context.PackContext.ToolName}.csproj", projectData);
         await SaveEmbeddedResourceAsync("Icon.png", "Icon.png");
 
         // Build
@@ -76,7 +76,7 @@ public sealed class PublishPackageTask : AsyncFrostingTask<BuildContext>
         dnMsBuildSettings.WithProperty("Version", context.PackContext.Version);
         dnMsBuildSettings.WithProperty("RepositoryUrl", context.PackContext.RepositoryUrl);
         
-        context.DotNetPack($"MonoGame.Library.{context.PackContext.LibraryName}.csproj", new DotNetPackSettings
+        context.DotNetPack($"MonoGame.Library.{context.PackContext.ToolName}.csproj", new DotNetPackSettings
         {
             MSBuildSettings = dnMsBuildSettings,
             Verbosity = DotNetVerbosity.Minimal,

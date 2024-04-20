@@ -3,7 +3,7 @@ namespace BuildScripts;
 
 public class PackContext
 {
-    public string LibraryName { get; }
+    public string ToolName { get; }
 
     public string LicensePath { get; }
 
@@ -17,7 +17,7 @@ public class PackContext
 
     public PackContext(ICakeContext context)
     {
-        LibraryName = context.Arguments("libraryname", "X").FirstOrDefault()!;
+        ToolName = context.Arguments("libraryname", "X").FirstOrDefault()!;
         LicensePath = context.Arguments("licensepath", "").FirstOrDefault()!;
         Version = "1.0.0";
         IsTag = false;
