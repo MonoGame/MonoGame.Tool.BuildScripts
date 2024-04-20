@@ -5,6 +5,8 @@ public class PackContext
 {
     public string ToolName { get; }
 
+    public string CommandName { get; }
+
     public string LicensePath { get; }
 
     public string? RepositoryOwner { get; }
@@ -18,6 +20,7 @@ public class PackContext
     public PackContext(ICakeContext context)
     {
         ToolName = context.Arguments("libraryname", "X").FirstOrDefault()!;
+        CommandName = context.Arguments("commandname", "X").FirstOrDefault()!
         LicensePath = context.Arguments("licensepath", "").FirstOrDefault()!;
         Version = "1.0.0";
         IsTag = false;

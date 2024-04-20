@@ -55,6 +55,7 @@ public sealed class PublishPackageTask : AsyncFrostingTask<BuildContext>
         // Generate Project
         var projectData = await ReadEmbeddedResourceAsync("MonoGame.Tool.X.txt");
         projectData = projectData.Replace("{X}", context.PackContext.ToolName);
+        projectData = projectData.Replace("{CommandName}", context.PackContext.CommandName);
         projectData = projectData.Replace("{LicencePath}", context.PackContext.LicensePath);
 
         if (context.PackContext.LicensePath.EndsWith(".txt"))
