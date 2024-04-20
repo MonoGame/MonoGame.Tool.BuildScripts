@@ -20,7 +20,7 @@ public class PackContext
     public PackContext(ICakeContext context)
     {
         ToolName = context.Arguments("libraryname", "X").FirstOrDefault()!;
-        CommandName = context.Arguments("commandname", "X").FirstOrDefault()!
+        CommandName = context.Arguments("commandname", "X").FirstOrDefault()!;
         LicensePath = context.Arguments("licensepath", "").FirstOrDefault()!;
         Version = "1.0.0";
         IsTag = false;
