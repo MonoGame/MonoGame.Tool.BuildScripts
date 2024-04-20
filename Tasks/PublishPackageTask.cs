@@ -53,7 +53,7 @@ public sealed class PublishPackageTask : AsyncFrostingTask<BuildContext>
         }
 
         // Generate Project
-        var projectData = await ReadEmbeddedResourceAsync("MonoGame.Library.X.txt");
+        var projectData = await ReadEmbeddedResourceAsync("MonoGame.Tool.X.txt");
         projectData = projectData.Replace("{X}", context.PackContext.ToolName);
         projectData = projectData.Replace("{LicencePath}", context.PackContext.LicensePath);
 
@@ -64,11 +64,11 @@ public sealed class PublishPackageTask : AsyncFrostingTask<BuildContext>
         else
             projectData = projectData.Replace("{LicenceName}", "LICENSE");
 
-        var librariesToInclude = from rid in requiredRids from filePath in Directory.GetFiles($"runtimes/{rid}/native")
+        var toolsToInclude = from rid in requiredRids from filePath in Directory.GetFiles($"runtimes/{rid}/native")
             select $"<Content Include=\"{filePath}\"><PackagePath>runtimes/{rid}/native</PackagePath></Content>";
-        projectData = projectData.Replace("{LibrariesToInclude}", string.Join(Environment.NewLine, librariesToInclude));
+        projectData = projectData.Replace("{ToolsToInclude}", string.Join(Environment.NewLine, toolsToInclude));
 
-        await File.WriteAllTextAsync($"MonoGame.Library.{context.PackContext.ToolName}.csproj", projectData);
+        await File.WriteAllTextAsync($"MonoGame.Tool.{context.PackContext.ToolName}.csproj", projectData);
         await SaveEmbeddedResourceAsync("Icon.png", "Icon.png");
 
         // Build
@@ -76,7 +76,7 @@ public sealed class PublishPackageTask : AsyncFrostingTask<BuildContext>
         dnMsBuildSettings.WithProperty("Version", context.PackContext.Version);
         dnMsBuildSettings.WithProperty("RepositoryUrl", context.PackContext.RepositoryUrl);
         
-        context.DotNetPack($"MonoGame.Library.{context.PackContext.ToolName}.csproj", new DotNetPackSettings
+        context.DotNetPack($"MonoGame.Tool.{context.PackContext.ToolName}.csproj", new DotNetPackSettings
         {
             MSBuildSettings = dnMsBuildSettings,
             Verbosity = DotNetVerbosity.Minimal,

@@ -20,7 +20,7 @@
   </ItemGroup>
 
   <ItemGroup>
-    {LibrariesToInclude}
+    {ToolsToInclude}
   </ItemGroup>
 
 </Project>
