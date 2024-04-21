@@ -1,0 +1,41 @@
+using System.Diagnostics;
+using System.Runtime.InteropServices;
+
+string arguments = string.Join("\" \"", args);
+string baseDirectory = AppContext.BaseDirectory;
+
+ProcessStartInfo startInfo = new ProcessStartInfo()
+{
+    Arguments = arguments,
+    UseShellExecute = true
+};
+
+if(RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
+{
+    startInfo.FileName = Path.Combine(baseDirectory, "runtimes", "windows-x64", "native", "{ExecutableName}");
+}
+else if(RuntimeInformation.IsOSPlatform(OSPlatform.Linux))
+{
+    startInfo.FileName = Path.Combine(baseDirectory, "runtimes", "linux-x64", "native", "{ExecutableName}");
+}
+else if(RuntimeInformation.IsOSPlatform(OSPlatform.OSX))
+{
+    var osxPath = Path.Combine(baseDirectory, "runtimes", "osx", "native", "{ExecutableName}");
+    if(!File.Exists(osxPath))
+    {
+        osxPath = RuntimeInformation.ProcessArchitecture switch
+        {
+            Architecture.Arm or Architecture.Arm64 => Path.Combine(baseDirectory, "runtimes", "osx-arm64", "native", "{ExecutableName}"),
+            _ => Path.Combine(baseDirectory, "runtimes", "osx-x64", "native", "{ExecutableName}")
+        };
+    }
+    startInfo.FileName = osxPath;
+}
+
+using (Process? process = Process.Start(startInfo))
+{
+    if (process is not null)
+    {
+        await process.WaitForExitAsync();
+    }
+}

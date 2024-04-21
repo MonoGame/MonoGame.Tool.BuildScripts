@@ -6,8 +6,6 @@ namespace BuildScripts;
 [IsDependentOn(typeof(PrepTask))]
 public sealed class PublishToolTask : AsyncFrostingTask<BuildContext>
 {
-    public override bool ShouldRun(BuildContext context) => context.BuildSystem().IsRunningOnGitHubActions;
-
     public override async Task RunAsync(BuildContext context)
     {
         var rid = "";
@@ -27,6 +25,10 @@ public sealed class PublishToolTask : AsyncFrostingTask<BuildContext>
             };
         }
 
-        await context.BuildSystem().GitHubActions.Commands.UploadArtifact(DirectoryPath.FromString(context.ArtifactsDir), $"artifacts-{rid}");
+        var copyTo = $"artifacts-{rid}";
+        if(context.BuildSystem().IsRunningOnGitHubActions)
+            await context.BuildSystem().GitHubActions.Commands.UploadArtifact(DirectoryPath.FromString(context.ArtifactsDir), copyTo);
+        else
+            context.CopyDirectory(context.ArtifactsDir, copyTo);
     }
 }

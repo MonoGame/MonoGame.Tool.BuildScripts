@@ -1,4 +1,6 @@
 
+using NuGet.Protocol.Core.Types;
+
 namespace BuildScripts;
 
 public class PackContext
@@ -6,6 +8,8 @@ public class PackContext
     public string ToolName { get; }
 
     public string CommandName { get; }
+
+    public string ExecutableName { get; }
 
     public string LicensePath { get; }
 
@@ -19,11 +23,14 @@ public class PackContext
 
     public PackContext(ICakeContext context)
     {
-        ToolName = context.Arguments("libraryname", "X").FirstOrDefault()!;
+        ToolName = context.Arguments("toolname", "X").FirstOrDefault()!;
         CommandName = context.Arguments("commandname", "X").FirstOrDefault()!;
+        ExecutableName = context.Arguments("executablename", "X").FirstOrDefault()!;
         LicensePath = context.Arguments("licensepath", "").FirstOrDefault()!;
         Version = "1.0.0";
         IsTag = false;
+        RepositoryUrl = string.Empty;
+        RepositoryOwner = string.Empty;
 
         if (context.BuildSystem().IsRunningOnGitHubActions)
         {
