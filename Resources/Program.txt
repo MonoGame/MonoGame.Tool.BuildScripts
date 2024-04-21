@@ -7,7 +7,7 @@ string baseDirectory = AppContext.BaseDirectory;
 ProcessStartInfo startInfo = new ProcessStartInfo()
 {
     Arguments = arguments,
-    UseShellExecute = true
+    UseShellExecute = false
 };
 
 if(RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
