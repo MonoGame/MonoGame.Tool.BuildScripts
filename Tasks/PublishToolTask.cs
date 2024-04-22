@@ -32,7 +32,7 @@ public sealed class PublishToolTask : AsyncFrostingTask<BuildContext>
         }
         else
         {
-            //  When running locally, make the artifacts directory mimic what github would look like
+            // When running locally, make the artifacts directory mimic what github would look like
             var files = Directory.GetFiles(context.ArtifactsDir);
             context.CreateDirectory(new DirectoryPath($"{context.ArtifactsDir}/{copyToDir}"));
             foreach (var file in files)
