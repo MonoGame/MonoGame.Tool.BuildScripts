@@ -9,17 +9,17 @@ public sealed class PublishPackageTask : AsyncFrostingTask<BuildContext>
 {
     public override async Task RunAsync(BuildContext context)
     {
-        //  Create a temporary directory tha we can use to build the "project" in that we'll pack into a dotnet tool
+        // Create a temporary directory tha we can use to build the "project" in that we'll pack into a dotnet tool
         var projectDir = new DirectoryPath("temp");
         context.CreateDirectory(projectDir);
 
-        //  If this is running on a github runner, then download the remote artifacts from github, otherwise, use the
-        //  local artifacts so we can test/run this locally as well
+        // If this is running on a github runner, then download the remote artifacts from github, otherwise, use the
+        // local artifacts so we can test/run this locally as well
         if (context.BuildSystem().IsRunningOnGitHubActions)
         {
             var requiredRids = context.IsUniversalBinary ?
-           new string[] { "windows-x64", "linux-x64", "osx" } :
-           new string[] { "windows-x64", "linux-x64", "osx-x64", "osx-arm64" };
+                new string[] { "windows-x64", "linux-x64", "osx" } :
+                new string[] { "windows-x64", "linux-x64", "osx-x64", "osx-arm64" };
 
             foreach (var rid in requiredRids)
             {
@@ -34,8 +34,14 @@ public sealed class PublishPackageTask : AsyncFrostingTask<BuildContext>
         else
         {
             string rid = string.Empty;
-            if (context.IsRunningOnWindows()) rid = "windows-x64";
-            else if (context.IsRunningOnLinux()) rid = "linux-x64";
+            if (context.IsRunningOnWindows())
+            {
+                rid = "windows-x64";
+            }
+            else if (context.IsRunningOnLinux())
+            {
+                rid = "linux-x64";
+            }
             else if (context.IsRunningOnMacOs())
             {
                 if (context.IsUniversalBinary) rid = "osx";
@@ -50,7 +56,7 @@ public sealed class PublishPackageTask : AsyncFrostingTask<BuildContext>
             context.CopyDirectory($"{context.ArtifactsDir}/artifacts-{rid}", copyToDir);
         }
 
-        //  Create the temporary project that we'll use to pack into the dotnet tool
+        // Create the temporary project that we'll use to pack into the dotnet tool
         var licensePath = context.PackContext.LicensePath;
         var licenseName = "LICENSE";
 
@@ -76,10 +82,10 @@ public sealed class PublishPackageTask : AsyncFrostingTask<BuildContext>
 
         await SaveEmbeddedResourceAsync("Icon.png", $"{projectDir}/Icon.png");
 
-        //  Pack the project into a dotnet tool
+        // Pack the project into a dotnet tool
         var dnMsBuildSettings = new DotNetMSBuildSettings();
-        dnMsBuildSettings.WithProperty("Version", context.PackContext.Version ?? "1.0.0");
-        dnMsBuildSettings.WithProperty("RepositoryUrl", context.PackContext.RepositoryUrl ?? "https://localhost");
+        dnMsBuildSettings.WithProperty("Version", context.PackContext.Version);
+        dnMsBuildSettings.WithProperty("RepositoryUrl", context.PackContext.RepositoryUrl);
 
         context.DotNetPack(projectPath, new DotNetPackSettings()
         {
@@ -88,8 +94,8 @@ public sealed class PublishPackageTask : AsyncFrostingTask<BuildContext>
             Configuration = "Release"
         });
 
-        //  When running on a github runner, upload the dotnet tool nupkg to github otherwise just copy it to the
-        //  artifacts directory for local testing.
+        // When running on a github runner, upload the dotnet tool nupkg to github otherwise just copy it to the
+        // artifacts directory for local testing.
         if (context.BuildSystem().IsRunningOnGitHubActions)
         {
             foreach (var nugetPath in context.GetFiles($"{projectDir}/**/*.nupkg"))
@@ -111,13 +117,13 @@ public sealed class PublishPackageTask : AsyncFrostingTask<BuildContext>
             context.CopyFiles($"{projectDir}/**/*.nupkg", context.ArtifactsDir);
         }
 
-        //  Clean up the temp folder now that we're done
+        // Clean up the temp folder now that we're done
         context.DeleteDirectory(projectDir, new() { Force = true, Recursive = true });
     }
 
     private static async Task RunOnGithubAsync(BuildContext context, string projectDir)
     {
-        //  Download remote artifacts from github
+        // Download remote artifacts from github
         var requiredRids = context.IsUniversalBinary ?
             new string[] { "windows-x64", "linux-x64", "osx" } :
             new string[] { "windows-x64", "linux-x64", "osx-x64", "osx-arm64" };
@@ -131,8 +137,6 @@ public sealed class PublishPackageTask : AsyncFrostingTask<BuildContext>
             context.CreateDirectory(directoryPath);
             await context.BuildSystem().GitHubActions.Commands.DownloadArtifact($"artifacts-{rid}", directoryPath);
         }
-
-
     }
 
     private static async Task<string> ReadEmbeddedResourceAsync(string resourceName)

@@ -27,10 +27,11 @@ public sealed class TestLinuxTask : FrostingTask<BuildContext>
                 "ldd",
                 new ProcessSettings
                 {
-                    Arguments = $"{filePath}",
+                    Arguments = $"\"{filePath}\"",
                     RedirectStandardOutput = true
                 },
-                out IEnumerable<string> processOutput);
+                out IEnumerable<string> processOutput
+            );
 
             var passedTests = true;
             foreach (var line in processOutput)

@@ -25,17 +25,19 @@ public sealed class PublishToolTask : AsyncFrostingTask<BuildContext>
             };
         }
 
-        var copyTo = $"artifacts-{rid}";
-        if(context.BuildSystem().IsRunningOnGitHubActions)
-            await context.BuildSystem().GitHubActions.Commands.UploadArtifact(DirectoryPath.FromString(context.ArtifactsDir), copyTo);
+        var copyToDir = $"artifacts-{rid}";
+        if (context.BuildSystem().IsRunningOnGitHubActions)
+        {
+            await context.BuildSystem().GitHubActions.Commands.UploadArtifact(DirectoryPath.FromString(context.ArtifactsDir), copyToDir);
+        }
         else
         {
-            //  When running locally, make the artifacts directory mimic what github would look like
+            // When running locally, make the artifacts directory mimic what github would look like
             var files = Directory.GetFiles(context.ArtifactsDir);
-            context.CreateDirectory(new DirectoryPath($"{context.ArtifactsDir}/{copyTo}"));
-            foreach(var file in files)
+            context.CreateDirectory(new DirectoryPath($"{context.ArtifactsDir}/{copyToDir}"));
+            foreach (var file in files)
             {
-                context.MoveFileToDirectory(file, new DirectoryPath($"{context.ArtifactsDir}/{copyTo}"));
+                context.MoveFileToDirectory(file, new DirectoryPath($"{context.ArtifactsDir}/{copyToDir}"));
             }
         }
     }

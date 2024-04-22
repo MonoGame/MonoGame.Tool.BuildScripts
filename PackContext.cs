@@ -28,6 +28,7 @@ public class PackContext
         ExecutableName = context.Argument("executablename", "X");
         LicensePath = context.Argument("licensepath", "");
         Version = context.Argument("version", "1.0.0");
+        RepositoryUrl = "X";
         IsTag = false;
 
         if (context.BuildSystem().IsRunningOnGitHubActions)
