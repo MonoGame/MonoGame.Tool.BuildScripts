@@ -12,21 +12,21 @@ ProcessStartInfo startInfo = new ProcessStartInfo()
 
 if(RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
 {
-    startInfo.FileName = Path.Combine(baseDirectory, "runtimes", "windows-x64", "native", "{ExecutableName}");
+    startInfo.FileName = Path.Combine(baseDirectory, "binaries", "windows-x64", "{ExecutableName}");
 }
 else if(RuntimeInformation.IsOSPlatform(OSPlatform.Linux))
 {
-    startInfo.FileName = Path.Combine(baseDirectory, "runtimes", "linux-x64", "native", "{ExecutableName}");
+    startInfo.FileName = Path.Combine(baseDirectory, "binaries", "linux-x64", "{ExecutableName}");
 }
 else if(RuntimeInformation.IsOSPlatform(OSPlatform.OSX))
 {
-    var osxPath = Path.Combine(baseDirectory, "runtimes", "osx", "native", "{ExecutableName}");
+    var osxPath = Path.Combine(baseDirectory, "binaries", "osx", "{ExecutableName}");
     if(!File.Exists(osxPath))
     {
         osxPath = RuntimeInformation.ProcessArchitecture switch
         {
-            Architecture.Arm or Architecture.Arm64 => Path.Combine(baseDirectory, "runtimes", "osx-arm64", "native", "{ExecutableName}"),
-            _ => Path.Combine(baseDirectory, "runtimes", "osx-x64", "native", "{ExecutableName}")
+            Architecture.Arm or Architecture.Arm64 => Path.Combine(baseDirectory, "binaries", "osx-arm64", "{ExecutableName}"),
+            _ => Path.Combine(baseDirectory, "binaries", "osx-x64", "{ExecutableName}")
         };
     }
     startInfo.FileName = osxPath;

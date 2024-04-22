@@ -9,67 +9,48 @@ public sealed class PublishPackageTask : AsyncFrostingTask<BuildContext>
 {
     public override async Task RunAsync(BuildContext context)
     {
-        var projectDir = CreateProjectDirectory(context);
-        await DownloadArtifactsAsync(context, projectDir);
-        var projectPath = await CreateProjectAsync(context, projectDir);
-        PackProject(context, projectPath);
-        await UploadArtifactsAsync(context, projectDir);
-    }
-
-    private static DirectoryPath CreateProjectDirectory(BuildContext context)
-    {
-        var projectName = $"MonoGame.Tool.{context.PackContext.ToolName}";
-        var projectDir = new DirectoryPath($"{context.ArtifactsDir}/{projectName}");
+        //  Create a temporary directory tha we can use to build the "project" in that we'll pack into a dotnet tool
+        var projectDir = new DirectoryPath("temp");
         context.CreateDirectory(projectDir);
-        return projectDir;
-    }
 
-    private static async Task DownloadArtifactsAsync(BuildContext context, DirectoryPath projectDir)
-    {
+        //  If this is running on a github runner, then download the remote artifacts from github, otherwise, use the
+        //  local artifacts so we can test/run this locally as well
         if (context.BuildSystem().IsRunningOnGitHubActions)
-            await DownloadRemoteArtifactsAsync(context, projectDir);
-        else
-            DownloadLocalArtifacts(context, projectDir);
-    }
-
-    private static async Task DownloadRemoteArtifactsAsync(BuildContext context, DirectoryPath projectDir)
-    {
-        var requiredRids = context.IsUniversalBinary ?
-            new string[] { "windows-x64", "linux-x64", "osx" } :
-            new string[] { "windows-x64", "linux-x64", "osx-x64", "osx-arm64" };
-
-        foreach (var rid in requiredRids)
         {
-            var directoryPath = new DirectoryPath($"{projectDir}/binaries/{rid}");
-            if (context.DirectoryExists(directoryPath))
-                continue;
+            var requiredRids = context.IsUniversalBinary ?
+           new string[] { "windows-x64", "linux-x64", "osx" } :
+           new string[] { "windows-x64", "linux-x64", "osx-x64", "osx-arm64" };
 
-            context.CreateDirectory(directoryPath);
-            await context.BuildSystem().GitHubActions.Commands.DownloadArtifact($"artifacts-{rid}", directoryPath);
-        }
-    }
-
-    private static void DownloadLocalArtifacts(BuildContext context, DirectoryPath projectDir)
-    {
-        string rid = string.Empty;
-        if (context.IsRunningOnWindows()) rid = "windows-x64";
-        else if (context.IsRunningOnLinux()) rid = "linux-x64";
-        else if (context.IsRunningOnMacOs())
-        {
-            if (context.IsUniversalBinary) rid = "osx";
-            else rid = RuntimeInformation.ProcessArchitecture switch
+            foreach (var rid in requiredRids)
             {
-                Architecture.Arm or Architecture.Arm64 => "osx-arm64",
-                _ => "osx-x64"
-            };
+                var directoryPath = new DirectoryPath($"{projectDir}/binaries/{rid}");
+                if (context.DirectoryExists(directoryPath))
+                    continue;
+
+                context.CreateDirectory(directoryPath);
+                await context.BuildSystem().GitHubActions.Commands.DownloadArtifact($"artifacts-{rid}", directoryPath);
+            }
+        }
+        else
+        {
+            string rid = string.Empty;
+            if (context.IsRunningOnWindows()) rid = "windows-x64";
+            else if (context.IsRunningOnLinux()) rid = "linux-x64";
+            else if (context.IsRunningOnMacOs())
+            {
+                if (context.IsUniversalBinary) rid = "osx";
+                else rid = RuntimeInformation.ProcessArchitecture switch
+                {
+                    Architecture.Arm or Architecture.Arm64 => "osx-arm64",
+                    _ => "osx-x64"
+                };
+            }
+
+            var copyToDir = new DirectoryPath($"{projectDir}/binaries/{rid}");
+            context.CopyDirectory($"{context.ArtifactsDir}/artifacts-{rid}", copyToDir);
         }
 
-        var copyToDir = new DirectoryPath($"{projectDir}/binaries/{rid}");
-        context.CopyDirectory(context.ArtifactsDir, copyToDir);
-    }
-
-    private static async Task<string> CreateProjectAsync(BuildContext context, DirectoryPath projectDir)
-    {
+        //  Create the temporary project that we'll use to pack into the dotnet tool
         var licensePath = context.PackContext.LicensePath;
         var licenseName = "LICENSE";
 
@@ -85,7 +66,7 @@ public sealed class PublishPackageTask : AsyncFrostingTask<BuildContext>
                                  .Replace("{LicenseName}", licenseName)
                                  .Replace("{ContentInclude}", contentInclude);
 
-        string projectPath = $"{projectDir}/{projectDir}.csproj";
+        string projectPath = $"{projectDir}/MonoGame.Tool.{context.PackContext.ToolName}.csproj";
         await File.WriteAllTextAsync(projectPath, projectData);
 
         var programData = await ReadEmbeddedResourceAsync("Program.txt");
@@ -95,14 +76,10 @@ public sealed class PublishPackageTask : AsyncFrostingTask<BuildContext>
 
         await SaveEmbeddedResourceAsync("Icon.png", $"{projectDir}/Icon.png");
 
-        return projectPath;
-    }
-
-    private static void PackProject(BuildContext context, string projectPath)
-    {
+        //  Pack the project into a dotnet tool
         var dnMsBuildSettings = new DotNetMSBuildSettings();
-        dnMsBuildSettings.WithProperty("Version", context.PackContext.Version);
-        dnMsBuildSettings.WithProperty("RepositoryUrl", context.PackContext.RepositoryUrl);
+        dnMsBuildSettings.WithProperty("Version", context.PackContext.Version ?? "1.0.0");
+        dnMsBuildSettings.WithProperty("RepositoryUrl", context.PackContext.RepositoryUrl ?? "https://localhost");
 
         context.DotNetPack(projectPath, new DotNetPackSettings()
         {
@@ -110,41 +87,52 @@ public sealed class PublishPackageTask : AsyncFrostingTask<BuildContext>
             Verbosity = DotNetVerbosity.Minimal,
             Configuration = "Release"
         });
-    }
 
-    private static async Task UploadArtifactsAsync(BuildContext context, DirectoryPath projectDir)
-    {
-        if(context.BuildSystem().IsRunningOnGitHubActions)
-            await UploadRemoteArtifactsAsync(context, projectDir);
-        else
-            UploadLocalArtifact(context, projectDir);
-    }
-
-    private static async Task UploadRemoteArtifactsAsync(BuildContext context, DirectoryPath projectDir)
-    {
-        foreach (var nugetPath in context.GetFiles($"{projectDir}/bin/Release/*.nupkg"))
+        //  When running on a github runner, upload the dotnet tool nupkg to github otherwise just copy it to the
+        //  artifacts directory for local testing.
+        if (context.BuildSystem().IsRunningOnGitHubActions)
         {
-            await context.BuildSystem().GitHubActions.Commands.UploadArtifact(nugetPath, nugetPath.GetFilename().ToString());
-
-            if (context.PackContext.IsTag)
+            foreach (var nugetPath in context.GetFiles($"{projectDir}/**/*.nupkg"))
             {
-                context.DotNetNuGetPush(nugetPath, new DotNetNuGetPushSettings()
+                await context.BuildSystem().GitHubActions.Commands.UploadArtifact(nugetPath, nugetPath.GetFilename().ToString());
+
+                if (context.PackContext.IsTag)
                 {
-                    ApiKey = context.EnvironmentVariable("GITHUB_TOKEN"),
-                    Source = $"https://nuget.pkg.github.com/{context.PackContext.RepositoryOwner}/index.json"
-                });
+                    context.DotNetNuGetPush(nugetPath, new DotNetNuGetPushSettings()
+                    {
+                        ApiKey = context.EnvironmentVariable("GITHUB_TOKEN"),
+                        Source = $"https://nuget.pkg.github.com/{context.PackContext.RepositoryOwner}/index.json"
+                    });
+                }
             }
         }
+        else
+        {
+            context.CopyFiles($"{projectDir}/**/*.nupkg", context.ArtifactsDir);
+        }
+
+        //  Clean up the temp folder now that we're done
+        context.DeleteDirectory(projectDir, new() { Force = true, Recursive = true });
     }
 
-    private static void UploadLocalArtifact(BuildContext context, DirectoryPath projectDir)
+    private static async Task RunOnGithubAsync(BuildContext context, string projectDir)
     {
-        foreach (var nugetPath in context.GetFiles($"{projectDir}/bin/Release/*.nupkg"))
+        //  Download remote artifacts from github
+        var requiredRids = context.IsUniversalBinary ?
+            new string[] { "windows-x64", "linux-x64", "osx" } :
+            new string[] { "windows-x64", "linux-x64", "osx-x64", "osx-arm64" };
+
+        foreach (var rid in requiredRids)
         {
-            var fileName = nugetPath.GetFilename();
-            var copyTo = new FilePath($"{projectDir}/{fileName}");
-            context.CopyFile(nugetPath, copyTo);
+            var directoryPath = new DirectoryPath($"{projectDir}/binaries/{rid}");
+            if (context.DirectoryExists(directoryPath))
+                continue;
+
+            context.CreateDirectory(directoryPath);
+            await context.BuildSystem().GitHubActions.Commands.DownloadArtifact($"artifacts-{rid}", directoryPath);
         }
+
+
     }
 
     private static async Task<string> ReadEmbeddedResourceAsync(string resourceName)

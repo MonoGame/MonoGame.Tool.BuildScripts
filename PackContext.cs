@@ -29,8 +29,6 @@ public class PackContext
         LicensePath = context.Argument("licensepath", "");
         Version = context.Argument("version", "1.0.0");
         IsTag = false;
-        RepositoryUrl = string.Empty;
-        RepositoryOwner = string.Empty;
 
         if (context.BuildSystem().IsRunningOnGitHubActions)
         {
