@@ -84,8 +84,8 @@ public sealed class PublishPackageTask : AsyncFrostingTask<BuildContext>
 
         //  Pack the project into a dotnet tool
         var dnMsBuildSettings = new DotNetMSBuildSettings();
-        dnMsBuildSettings.WithProperty("Version", context.PackContext.Version ?? "1.0.0");
-        dnMsBuildSettings.WithProperty("RepositoryUrl", context.PackContext.RepositoryUrl ?? "https://localhost");
+        dnMsBuildSettings.WithProperty("Version", context.PackContext.Version);
+        dnMsBuildSettings.WithProperty("RepositoryUrl", context.PackContext.RepositoryUrl);
 
         context.DotNetPack(projectPath, new DotNetPackSettings()
         {
