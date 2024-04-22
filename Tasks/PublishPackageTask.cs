@@ -34,8 +34,14 @@ public sealed class PublishPackageTask : AsyncFrostingTask<BuildContext>
         else
         {
             string rid = string.Empty;
-            if (context.IsRunningOnWindows()) rid = "windows-x64";
-            else if (context.IsRunningOnLinux()) rid = "linux-x64";
+            if (context.IsRunningOnWindows())
+            {
+                 rid = "windows-x64";
+            }
+            else if (context.IsRunningOnLinux())
+            {
+                rid = "linux-x64";
+            }
             else if (context.IsRunningOnMacOs())
             {
                 if (context.IsUniversalBinary) rid = "osx";
