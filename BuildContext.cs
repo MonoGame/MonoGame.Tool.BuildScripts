@@ -11,8 +11,8 @@ public class BuildContext : FrostingContext
 
     public BuildContext(ICakeContext context) : base(context)
     {
-        ArtifactsDir = context.Arguments("artifactsDir", "artifacts").FirstOrDefault()!;
-        IsUniversalBinary = context.Arguments("universalBinary", false).FirstOrDefault();
+        ArtifactsDir = context.Argument("artifactsDir", "artifacts");
+        IsUniversalBinary = context.Argument("universalBinary", false);
         PackContext = new PackContext(context);
 
         if (context.BuildSystem().IsRunningOnGitHubActions &&

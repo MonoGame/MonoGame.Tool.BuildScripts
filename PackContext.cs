@@ -23,11 +23,11 @@ public class PackContext
 
     public PackContext(ICakeContext context)
     {
-        ToolName = context.Arguments("toolname", "X").FirstOrDefault()!;
-        CommandName = context.Arguments("commandname", "X").FirstOrDefault()!;
-        ExecutableName = context.Arguments("executablename", "X").FirstOrDefault()!;
-        LicensePath = context.Arguments("licensepath", "").FirstOrDefault()!;
-        Version = "1.0.0";
+        ToolName = context.Argument("toolname", "X");
+        CommandName = context.Argument("commandname", "X");
+        ExecutableName = context.Argument("executablename", "X");
+        LicensePath = context.Argument("licensepath", "");
+        Version = context.Argument("version", "1.0.0");
         IsTag = false;
         RepositoryUrl = string.Empty;
         RepositoryOwner = string.Empty;

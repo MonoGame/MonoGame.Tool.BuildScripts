@@ -7,25 +7,19 @@ namespace BuildScripts;
 [TaskName("Package")]
 public sealed class PublishPackageTask : AsyncFrostingTask<BuildContext>
 {
-
     public override async Task RunAsync(BuildContext context)
     {
-        context.Information("Creating project directory ...");
         var projectDir = CreateProjectDirectory(context);
-        context.Information("Downloading Artifacts Async ...");
         await DownloadArtifactsAsync(context, projectDir);
-        context.Information("Creating Project Async ...");
         var projectPath = await CreateProjectAsync(context, projectDir);
-        context.Information("Packing Project ...");
         PackProject(context, projectPath);
-        context.Information("Uploading Artifacts Async ...");
         await UploadArtifactsAsync(context, projectDir);
     }
 
     private static DirectoryPath CreateProjectDirectory(BuildContext context)
     {
         var projectName = $"MonoGame.Tool.{context.PackContext.ToolName}";
-        var projectDir = new DirectoryPath(projectName);
+        var projectDir = new DirectoryPath($"{context.ArtifactsDir}/{projectName}");
         context.CreateDirectory(projectDir);
         return projectDir;
     }
@@ -46,7 +40,7 @@ public sealed class PublishPackageTask : AsyncFrostingTask<BuildContext>
 
         foreach (var rid in requiredRids)
         {
-            var directoryPath = new DirectoryPath($"{projectDir}/runtimes/{rid}/native");
+            var directoryPath = new DirectoryPath($"{projectDir}/binaries/{rid}");
             if (context.DirectoryExists(directoryPath))
                 continue;
 
@@ -70,7 +64,7 @@ public sealed class PublishPackageTask : AsyncFrostingTask<BuildContext>
             };
         }
 
-        var copyToDir = new DirectoryPath($"{projectDir}/runtimes/{rid}/native");
+        var copyToDir = new DirectoryPath($"{projectDir}/binaries/{rid}");
         context.CopyDirectory(context.ArtifactsDir, copyToDir);
     }
 
@@ -82,7 +76,7 @@ public sealed class PublishPackageTask : AsyncFrostingTask<BuildContext>
         if (licensePath.EndsWith(".txt")) licenseName += ".txt";
         else if (licensePath.EndsWith(".md")) licenseName += ".md";
 
-        var contentInclude = $"<Content Include=\"runtimes\\**\\*\" CopyToOutputDirectory=\"PreserveNewest\" />";
+        var contentInclude = $"<Content Include=\"binaries\\**\\*\" CopyToOutputDirectory=\"PreserveNewest\" />";
 
         var projectData = await ReadEmbeddedResourceAsync("MonoGame.Tool.X.txt");
         projectData = projectData.Replace("{X}", context.PackContext.ToolName)
@@ -108,7 +102,7 @@ public sealed class PublishPackageTask : AsyncFrostingTask<BuildContext>
     {
         var dnMsBuildSettings = new DotNetMSBuildSettings();
         dnMsBuildSettings.WithProperty("Version", context.PackContext.Version);
-        // dnMsBuildSettings.WithProperty("RepositoryUrl", context.PackContext.RepositoryUrl);
+        dnMsBuildSettings.WithProperty("RepositoryUrl", context.PackContext.RepositoryUrl);
 
         context.DotNetPack(projectPath, new DotNetPackSettings()
         {
@@ -170,6 +164,4 @@ public sealed class PublishPackageTask : AsyncFrostingTask<BuildContext>
         await stream.CopyToAsync(writer);
         writer.Close();
     }
-
-
 }
