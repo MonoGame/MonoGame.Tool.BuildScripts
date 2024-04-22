@@ -137,8 +137,6 @@ public sealed class PublishPackageTask : AsyncFrostingTask<BuildContext>
             context.CreateDirectory(directoryPath);
             await context.BuildSystem().GitHubActions.Commands.DownloadArtifact($"artifacts-{rid}", directoryPath);
         }
-
-
     }
 
     private static async Task<string> ReadEmbeddedResourceAsync(string resourceName)
