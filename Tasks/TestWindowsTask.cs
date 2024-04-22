@@ -37,7 +37,7 @@ public sealed class TestWindowsTask : FrostingTask<BuildContext>
                 devcmdPath,
                 new ProcessSettings()
                 {
-                    Arguments = $"& dumpbin /dependents /nologo {filePath}",
+                    Arguments = $"& dumpbin /dependents /nologo \"{filePath}\"",
                     RedirectStandardOutput = true
                 },
                 out IEnumerable<string> processOutput

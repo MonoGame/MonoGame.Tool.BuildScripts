@@ -27,7 +27,7 @@ public sealed class TestLinuxTask : FrostingTask<BuildContext>
                 "ldd",
                 new ProcessSettings
                 {
-                    Arguments = $"{filePath}",
+                    Arguments = $"\"{filePath}\"",
                     RedirectStandardOutput = true
                 },
                 out IEnumerable<string> processOutput

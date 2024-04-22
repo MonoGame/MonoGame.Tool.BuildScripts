@@ -15,7 +15,7 @@ public sealed class TestMacOSTask : FrostingTask<BuildContext>
                 "dyld_info",
                 new ProcessSettings
                 {
-                    Arguments = $"-dependents {filePath}",
+                    Arguments = $"-dependents \"{filePath}\"",
                     RedirectStandardOutput = true
                 },
                 out IEnumerable<string> processOutput
