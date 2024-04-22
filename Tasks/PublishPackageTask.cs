@@ -9,7 +9,7 @@ public sealed class PublishPackageTask : AsyncFrostingTask<BuildContext>
 {
     public override async Task RunAsync(BuildContext context)
     {
-        //  Create a temporary directory tha we can use to build the "project" in that we'll pack into a dotnet tool
+        // Create a temporary directory tha we can use to build the "project" in that we'll pack into a dotnet tool
         var projectDir = new DirectoryPath("temp");
         context.CreateDirectory(projectDir);
 
@@ -56,7 +56,7 @@ public sealed class PublishPackageTask : AsyncFrostingTask<BuildContext>
             context.CopyDirectory($"{context.ArtifactsDir}/artifacts-{rid}", copyToDir);
         }
 
-        //  Create the temporary project that we'll use to pack into the dotnet tool
+        // Create the temporary project that we'll use to pack into the dotnet tool
         var licensePath = context.PackContext.LicensePath;
         var licenseName = "LICENSE";
 
@@ -94,8 +94,8 @@ public sealed class PublishPackageTask : AsyncFrostingTask<BuildContext>
             Configuration = "Release"
         });
 
-        //  When running on a github runner, upload the dotnet tool nupkg to github otherwise just copy it to the
-        //  artifacts directory for local testing.
+        // When running on a github runner, upload the dotnet tool nupkg to github otherwise just copy it to the
+        // artifacts directory for local testing.
         if (context.BuildSystem().IsRunningOnGitHubActions)
         {
             foreach (var nugetPath in context.GetFiles($"{projectDir}/**/*.nupkg"))
@@ -123,7 +123,7 @@ public sealed class PublishPackageTask : AsyncFrostingTask<BuildContext>
 
     private static async Task RunOnGithubAsync(BuildContext context, string projectDir)
     {
-        //  Download remote artifacts from github
+        // Download remote artifacts from github
         var requiredRids = context.IsUniversalBinary ?
             new string[] { "windows-x64", "linux-x64", "osx" } :
             new string[] { "windows-x64", "linux-x64", "osx-x64", "osx-arm64" };
