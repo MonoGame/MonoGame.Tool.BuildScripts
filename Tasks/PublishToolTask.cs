@@ -27,7 +27,9 @@ public sealed class PublishToolTask : AsyncFrostingTask<BuildContext>
 
         var copyTo = $"artifacts-{rid}";
         if(context.BuildSystem().IsRunningOnGitHubActions)
+        {
             await context.BuildSystem().GitHubActions.Commands.UploadArtifact(DirectoryPath.FromString(context.ArtifactsDir), copyTo);
+        }
         else
         {
             //  When running locally, make the artifacts directory mimic what github would look like
