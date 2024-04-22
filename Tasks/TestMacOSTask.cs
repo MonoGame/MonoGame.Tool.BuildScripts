@@ -18,7 +18,8 @@ public sealed class TestMacOSTask : FrostingTask<BuildContext>
                     Arguments = $"-dependents {filePath}",
                     RedirectStandardOutput = true
                 },
-                out IEnumerable<string> processOutput);
+                out IEnumerable<string> processOutput
+            );
 
             var processOutputList = processOutput.ToList();
             var passedTests = true;

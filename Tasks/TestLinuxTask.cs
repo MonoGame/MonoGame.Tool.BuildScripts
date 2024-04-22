@@ -30,7 +30,8 @@ public sealed class TestLinuxTask : FrostingTask<BuildContext>
                     Arguments = $"{filePath}",
                     RedirectStandardOutput = true
                 },
-                out IEnumerable<string> processOutput);
+                out IEnumerable<string> processOutput
+            );
 
             var passedTests = true;
             foreach (var line in processOutput)
