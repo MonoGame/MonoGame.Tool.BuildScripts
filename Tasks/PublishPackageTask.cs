@@ -13,8 +13,8 @@ public sealed class PublishPackageTask : AsyncFrostingTask<BuildContext>
         var projectDir = new DirectoryPath("temp");
         context.CreateDirectory(projectDir);
 
-        //  If this is running on a github runner, then download the remote artifacts from github, otherwise, use the
-        //  local artifacts so we can test/run this locally as well
+        // If this is running on a github runner, then download the remote artifacts from github, otherwise, use the
+        // local artifacts so we can test/run this locally as well
         if (context.BuildSystem().IsRunningOnGitHubActions)
         {
             var requiredRids = context.IsUniversalBinary ?
@@ -82,7 +82,7 @@ public sealed class PublishPackageTask : AsyncFrostingTask<BuildContext>
 
         await SaveEmbeddedResourceAsync("Icon.png", $"{projectDir}/Icon.png");
 
-        //  Pack the project into a dotnet tool
+        // Pack the project into a dotnet tool
         var dnMsBuildSettings = new DotNetMSBuildSettings();
         dnMsBuildSettings.WithProperty("Version", context.PackContext.Version);
         dnMsBuildSettings.WithProperty("RepositoryUrl", context.PackContext.RepositoryUrl);
@@ -117,7 +117,7 @@ public sealed class PublishPackageTask : AsyncFrostingTask<BuildContext>
             context.CopyFiles($"{projectDir}/**/*.nupkg", context.ArtifactsDir);
         }
 
-        //  Clean up the temp folder now that we're done
+        // Clean up the temp folder now that we're done
         context.DeleteDirectory(projectDir, new() { Force = true, Recursive = true });
     }
 
