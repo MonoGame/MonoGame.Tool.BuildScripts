@@ -26,7 +26,7 @@ public sealed class PublishToolTask : AsyncFrostingTask<BuildContext>
         }
 
         var copyTo = $"artifacts-{rid}";
-        if(context.BuildSystem().IsRunningOnGitHubActions)
+        if (context.BuildSystem().IsRunningOnGitHubActions)
         {
             await context.BuildSystem().GitHubActions.Commands.UploadArtifact(DirectoryPath.FromString(context.ArtifactsDir), copyTo);
         }
@@ -35,7 +35,7 @@ public sealed class PublishToolTask : AsyncFrostingTask<BuildContext>
             //  When running locally, make the artifacts directory mimic what github would look like
             var files = Directory.GetFiles(context.ArtifactsDir);
             context.CreateDirectory(new DirectoryPath($"{context.ArtifactsDir}/{copyTo}"));
-            foreach(var file in files)
+            foreach (var file in files)
             {
                 context.MoveFileToDirectory(file, new DirectoryPath($"{context.ArtifactsDir}/{copyTo}"));
             }
