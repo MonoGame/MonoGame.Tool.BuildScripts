@@ -20,7 +20,8 @@ public sealed class TestWindowsTask : FrostingTask<BuildContext>
         "SHELL32.dll",
         "SHLWAPI.dll",
         "AVICAP32.dll",
-        "bcrypt.dll"
+        "bcrypt.dll",
+        "msvcrt.dll"
     };
 
     public override bool ShouldRun(BuildContext context) => context.IsRunningOnWindows();
