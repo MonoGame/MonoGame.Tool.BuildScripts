@@ -2,14 +2,9 @@ namespace BuildScripts;
 
 public static class FrostingContextExtensions
 {
-    private static readonly ProcessSettings _processSettings;
+    private static readonly ProcessSettings _processSettings = new();
 
-    static FrostingContextExtensions() => _processSettings = new ProcessSettings();
-
-    public static void SetShellWorkingDir(this FrostingContext context, string path)
-    {
-        _processSettings.WorkingDirectory = path;
-    }
+    public static void SetShellWorkingDir(this FrostingContext context, string path) => _processSettings.WorkingDirectory = path;
 
     public static int ShellExecute(this FrostingContext context, string command, string environmentVariables = "")
     {
