@@ -20,7 +20,14 @@ public sealed class TestLinuxTask : FrostingTask<BuildContext>
 
     public override void Run(BuildContext context)
     {
-        foreach (var filePath in Directory.GetFiles(context.ArtifactsDir))
+        // Ensure there are files to test otherwise this will always pass
+        var files = Directory.GetFiles(context.ArtifactsDir);
+        if (files is null || files.Length == 0)
+        {
+            throw new Exception("There are no files in the artifacts directory to test");
+        }
+
+        foreach (var filePath in files)
         {
             context.Information($"Checking: {filePath}");
             context.StartProcess(
