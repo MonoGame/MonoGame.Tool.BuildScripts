@@ -63,7 +63,7 @@ public sealed class PublishPackageTask : AsyncFrostingTask<BuildContext>
         if (licensePath.EndsWith(".txt")) licenseName += ".txt";
         else if (licensePath.EndsWith(".md")) licenseName += ".md";
 
-        var contentInclude = $"<Content Include=\"binaries\\**\\*\" CopyToOutputDirectory=\"PreserveNewest\" />";
+        var contentInclude = $"<None Include=\"binaries\\**\\*\" CopyToOutputDirectory=\"PreserveNewest\" />";
 
         var projectData = await ReadEmbeddedResourceAsync("MonoGame.Tool.X.txt");
         projectData = projectData.Replace("{X}", context.PackContext.ToolName)
