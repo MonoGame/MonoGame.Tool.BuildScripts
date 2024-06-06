@@ -91,14 +91,15 @@ public sealed class PublishPackageTask : AsyncFrostingTask<BuildContext>
         {
             MSBuildSettings = dnMsBuildSettings,
             Verbosity = DotNetVerbosity.Minimal,
-            Configuration = "Release"
+            Configuration = "Release",
+            OutputDirectory = context.ArtifactsDir
         });
 
         // When running on a github runner, upload the dotnet tool nupkg to github otherwise just copy it to the
         // artifacts directory for local testing.
         if (context.BuildSystem().IsRunningOnGitHubActions)
         {
-            foreach (var nugetPath in context.GetFiles($"{projectDir}/**/*.nupkg"))
+            foreach (var nugetPath in context.GetFiles($"{context.ArtifactsDir}/**/*.nupkg"))
             {
                 await context.BuildSystem().GitHubActions.Commands.UploadArtifact(nugetPath, nugetPath.GetFilename().ToString());
 
@@ -111,10 +112,6 @@ public sealed class PublishPackageTask : AsyncFrostingTask<BuildContext>
                     });
                 }
             }
-        }
-        else
-        {
-            context.CopyFiles($"{projectDir}/**/*.nupkg", context.ArtifactsDir);
         }
 
         // Clean up the temp folder now that we're done
