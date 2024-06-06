@@ -15,7 +15,7 @@
   <PropertyGroup>
     <PackAsTool>true</PackAsTool>
     <PackageIcon>Icon.png</PackageIcon>
-    <PackageId>dotnet-{CommandName}</PackageId>
+    <PackageId>{CommandName}</PackageId>
     <PackageLicenseFile>{LicenseName}</PackageLicenseFile>
     <ToolCommandName>{CommandName}</ToolCommandName>
   </PropertyGroup>
