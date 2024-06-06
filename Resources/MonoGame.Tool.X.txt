@@ -9,7 +9,7 @@
 
   <PropertyGroup>
     <Title>MonoGame build of {X} Tool</Title>
-    <Description>This package contains an {X} tool built for distributing MonoGame games.</Description>
+    <Description>This package contains executables for {X} built for usage with MonoGame.</Description>
   </PropertyGroup>
 
   <PropertyGroup>
