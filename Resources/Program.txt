@@ -1,7 +1,15 @@
 using System.Diagnostics;
 using System.Runtime.InteropServices;
 
-string arguments = string.Join("\" \"", args);
+for(int i = 0; i < args.Length; i++)
+{
+    if(args[i].Contains(" "))
+    {
+        args[i] = $"\"{args[i]}\"";
+    }
+}
+
+string arguments = string.Join(" ", args);
 string baseDirectory = AppContext.BaseDirectory;
 
 ProcessStartInfo startInfo = new ProcessStartInfo()
