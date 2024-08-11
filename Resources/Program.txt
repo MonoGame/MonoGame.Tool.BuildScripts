@@ -45,5 +45,11 @@ using (Process? process = Process.Start(startInfo))
     if (process is not null)
     {
         await process.WaitForExitAsync();
+        return process.ExitCode;
+    }
+    else
+    {
+        // unable to start process
+        return 1;
     }
 }
