@@ -63,19 +63,19 @@ public sealed class PublishPackageTask : AsyncFrostingTask<BuildContext>
         if (licensePath.EndsWith(".txt")) licenseName += ".txt";
         else if (licensePath.EndsWith(".md")) licenseName += ".md";
 
-        var readMePath = context.PackContext.ReadMePath;
-        var readMeName = "README";
+        var readMeName = "README.md";
+        var readMePath = $"{projectDir}/{readMeName}";
 
-        if (readMePath.EndsWith(".txt")) readMeName += ".txt";
-        else if (readMePath.EndsWith(".md")) readMeName += ".md";
+        var description = $"This package contains executables for {context.PackContext.ToolName} built for usage with MonoGame.";
 
         var contentInclude = $"<None Include=\"binaries\\**\\*\" CopyToOutputDirectory=\"PreserveNewest\" />";
 
         var projectData = await ReadEmbeddedResourceAsync("MonoGame.Tool.X.txt");
         projectData = projectData.Replace("{X}", context.PackContext.ToolName)
+                                 .Replace("{Description}", description)
                                  .Replace("{CommandName}", context.PackContext.CommandName)
                                  .Replace("{LicensePath}", context.PackContext.LicensePath)
-                                 .Replace("{ReadMePath}", context.PackContext.ReadMePath)
+                                 .Replace("{ReadMePath}", readMeName)
                                  .Replace("{LicenseName}", licenseName)
                                  .Replace("{ReadMeName}", readMeName)
                                  .Replace("{ContentInclude}", contentInclude);
@@ -87,6 +87,8 @@ public sealed class PublishPackageTask : AsyncFrostingTask<BuildContext>
         programData = programData.Replace("{ExecutableName}", context.PackContext.ExecutableName);
         var programPath = $"{projectDir}/Program.cs";
         await File.WriteAllTextAsync(programPath, programData);
+
+         await File.WriteAllTextAsync(readMePath, description);
 
         await SaveEmbeddedResourceAsync("Icon.png", $"{projectDir}/Icon.png");
 

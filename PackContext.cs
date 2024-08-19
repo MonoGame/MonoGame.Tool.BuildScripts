@@ -13,8 +13,6 @@ public class PackContext
 
     public string LicensePath { get; }
 
-    public string ReadMePath { get; }
-
     public string? RepositoryOwner { get; }
 
     public string? RepositoryUrl { get; }
@@ -29,7 +27,6 @@ public class PackContext
         CommandName = context.Argument("commandname", "X");
         ExecutableName = context.Argument("executablename", "X");
         LicensePath = context.Argument("licensepath", "");
-        ReadMePath = context.Argument("readmepath", "");
         Version = context.Argument("version", "1.0.0");
         RepositoryUrl = "X";
         IsTag = false;
