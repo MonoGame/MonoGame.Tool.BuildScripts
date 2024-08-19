@@ -88,7 +88,7 @@ public sealed class PublishPackageTask : AsyncFrostingTask<BuildContext>
         var programPath = $"{projectDir}/Program.cs";
         await File.WriteAllTextAsync(programPath, programData);
 
-         await File.WriteAllTextAsync(readMePath, description);
+        await File.WriteAllTextAsync(readMePath, description);
 
         await SaveEmbeddedResourceAsync("Icon.png", $"{projectDir}/Icon.png");
 
