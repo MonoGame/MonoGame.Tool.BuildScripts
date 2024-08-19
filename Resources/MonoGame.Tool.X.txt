@@ -17,11 +17,13 @@
     <PackageIcon>Icon.png</PackageIcon>
     <PackageId>{CommandName}</PackageId>
     <PackageLicenseFile>{LicenseName}</PackageLicenseFile>
+    <PackageReadmeFile>{ReadMeName}</PackageReadmeFile>
     <ToolCommandName>{CommandName}</ToolCommandName>
   </PropertyGroup>
 
   <ItemGroup>
       <None Include="../{LicensePath}" Pack="true" PackagePath="" />
+      <None Include="../{ReadMePath}" Pack="true" PackagePath="" />
       <None Include="Icon.png" Pack="true" PackagePath="" />
   </ItemGroup>
 

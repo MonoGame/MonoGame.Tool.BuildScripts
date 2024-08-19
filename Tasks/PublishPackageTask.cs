@@ -63,13 +63,21 @@ public sealed class PublishPackageTask : AsyncFrostingTask<BuildContext>
         if (licensePath.EndsWith(".txt")) licenseName += ".txt";
         else if (licensePath.EndsWith(".md")) licenseName += ".md";
 
+        var readMePath = context.PackContext.ReadMePath;
+        var readMeName = "README";
+
+        if (readMePath.EndsWith(".txt")) readMeName += ".txt";
+        else if (readMePath.EndsWith(".md")) readMeName += ".md";
+
         var contentInclude = $"<None Include=\"binaries\\**\\*\" CopyToOutputDirectory=\"PreserveNewest\" />";
 
         var projectData = await ReadEmbeddedResourceAsync("MonoGame.Tool.X.txt");
         projectData = projectData.Replace("{X}", context.PackContext.ToolName)
                                  .Replace("{CommandName}", context.PackContext.CommandName)
                                  .Replace("{LicensePath}", context.PackContext.LicensePath)
+                                 .Replace("{ReadMePath}", context.PackContext.ReadMePath)
                                  .Replace("{LicenseName}", licenseName)
+                                 .Replace("{ReadMeName}", readMeName)
                                  .Replace("{ContentInclude}", contentInclude);
 
         string projectPath = $"{projectDir}/MonoGame.Tool.{context.PackContext.ToolName}.csproj";
