@@ -63,13 +63,21 @@ public sealed class PublishPackageTask : AsyncFrostingTask<BuildContext>
         if (licensePath.EndsWith(".txt")) licenseName += ".txt";
         else if (licensePath.EndsWith(".md")) licenseName += ".md";
 
+        var readMeName = "README.md";
+        var readMePath = $"{projectDir}/{readMeName}";
+
+        var description = $"This package contains executables for {context.PackContext.ToolName} built for usage with MonoGame.";
+
         var contentInclude = $"<None Include=\"binaries\\**\\*\" CopyToOutputDirectory=\"PreserveNewest\" />";
 
         var projectData = await ReadEmbeddedResourceAsync("MonoGame.Tool.X.txt");
         projectData = projectData.Replace("{X}", context.PackContext.ToolName)
+                                 .Replace("{Description}", description)
                                  .Replace("{CommandName}", context.PackContext.CommandName)
                                  .Replace("{LicensePath}", context.PackContext.LicensePath)
+                                 .Replace("{ReadMePath}", readMeName)
                                  .Replace("{LicenseName}", licenseName)
+                                 .Replace("{ReadMeName}", readMeName)
                                  .Replace("{ContentInclude}", contentInclude);
 
         string projectPath = $"{projectDir}/MonoGame.Tool.{context.PackContext.ToolName}.csproj";
@@ -79,6 +87,8 @@ public sealed class PublishPackageTask : AsyncFrostingTask<BuildContext>
         programData = programData.Replace("{ExecutableName}", context.PackContext.ExecutableName);
         var programPath = $"{projectDir}/Program.cs";
         await File.WriteAllTextAsync(programPath, programData);
+
+        await File.WriteAllTextAsync(readMePath, description);
 
         await SaveEmbeddedResourceAsync("Icon.png", $"{projectDir}/Icon.png");
 
