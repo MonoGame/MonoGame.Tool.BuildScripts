@@ -1,0 +1,9 @@
+<Project>
+
+  <ItemGroup>
+    <Content
+      Include="$(MSBuildThisFileDirectory)..\binaries\**\*"
+      CopyToOutputDirectory="PreserveNewest" />
+  </ItemGroup>
+
+</Project>
