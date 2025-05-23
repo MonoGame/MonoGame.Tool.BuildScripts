@@ -9,19 +9,9 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <EmbeddedResource Include="Resources/Icon.png">
+    <EmbeddedResource Include="Resources/*">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-      <LogicalName>Icon.png</LogicalName>
-    </EmbeddedResource>
-
-    <EmbeddedResource Include="Resources/MonoGame.Tool.X.txt">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-      <LogicalName>MonoGame.Tool.X.txt</LogicalName>
-    </EmbeddedResource>
-
-    <EmbeddedResource Include="Resources/Program.txt">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-      <LogicalName>Program.txt</LogicalName>
+      <LogicalName>%(Filename)%(Extension)</LogicalName>
     </EmbeddedResource>
   </ItemGroup>
 

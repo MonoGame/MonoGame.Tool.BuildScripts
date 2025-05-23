@@ -1,35 +1,27 @@
 <Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
-    <OutputType>Exe</OutputType>
     <TargetFramework>net8.0</TargetFramework>
     <ImplicitUsings>true</ImplicitUsings>
     <Nullable>enable</Nullable>
-    <RollForward>Major</RollForward>
-  </PropertyGroup>
-
-  <PropertyGroup>
     <Title>MonoGame build of {X} Tool</Title>
     <Description>{Description}</Description>
-  </PropertyGroup>
-
-  <PropertyGroup>
-    <PackAsTool>true</PackAsTool>
     <PackageIcon>Icon.png</PackageIcon>
-    <PackageId>{CommandName}</PackageId>
     <PackageLicenseFile>{LicenseName}</PackageLicenseFile>
-    <PackageReadmeFile>{ReadMeName}</PackageReadmeFile>
-    <ToolCommandName>{CommandName}</ToolCommandName>
   </PropertyGroup>
 
   <ItemGroup>
       <None Include="../{LicensePath}" Pack="true" PackagePath="" />
-      <None Include="../{ReadMePath}" Pack="true" PackagePath="" />
+      <None Include="../README.md" Pack="true" PackagePath="" />
       <None Include="Icon.png" Pack="true" PackagePath="" />
   </ItemGroup>
 
   <ItemGroup>
-    {ContentInclude}
+    <Content Include="binaries/**/*" PackagePath="binaries" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Content Include="MonoGame.Tool.{X}.targets" PackagePath="build" />
   </ItemGroup>
 
 </Project>

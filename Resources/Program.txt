@@ -1,55 +1,116 @@
 using System.Diagnostics;
 using System.Runtime.InteropServices;
 
-for(int i = 0; i < args.Length; i++)
+namespace MonoGame.Tool;
+
+public class {X}
 {
-    if(args[i].Contains(" "))
+    static string FindCommand(string commandid)
     {
-        args[i] = $"\"{args[i]}\"";
-    }
-}
+        var baseDir = Path.GetDirectoryName(typeof({X}).Assembly.Location) ?? "";
 
-string arguments = string.Join(" ", args);
-string baseDirectory = AppContext.BaseDirectory;
-
-ProcessStartInfo startInfo = new ProcessStartInfo()
-{
-    Arguments = arguments,
-    UseShellExecute = false
-};
-
-if(RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
-{
-    startInfo.FileName = Path.Combine(baseDirectory, "binaries", "windows-x64", "{ExecutableName}");
-}
-else if(RuntimeInformation.IsOSPlatform(OSPlatform.Linux))
-{
-    startInfo.FileName = Path.Combine(baseDirectory, "binaries", "linux-x64", "{ExecutableName}");
-}
-else if(RuntimeInformation.IsOSPlatform(OSPlatform.OSX))
-{
-    var osxPath = Path.Combine(baseDirectory, "binaries", "osx", "{ExecutableName}");
-    if(!File.Exists(osxPath))
-    {
-        osxPath = RuntimeInformation.ProcessArchitecture switch
+        if (RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
         {
-            Architecture.Arm or Architecture.Arm64 => Path.Combine(baseDirectory, "binaries", "osx-arm64", "{ExecutableName}"),
-            _ => Path.Combine(baseDirectory, "binaries", "osx-x64", "{ExecutableName}")
-        };
-    }
-    startInfo.FileName = osxPath;
-}
+            return Path.Combine(baseDir, "windows-x64", commandid);
+        }
+        else if (RuntimeInformation.IsOSPlatform(OSPlatform.OSX))
+        {
+            var osxPath = Path.Combine(baseDir, "osx", commandid);
+            if (!File.Exists(osxPath))
+            {
+                osxPath = RuntimeInformation.ProcessArchitecture switch
+                {
+                    Architecture.Arm or Architecture.Arm64 => Path.Combine(baseDir, "osx-arm64", commandid),
+                    _ => Path.Combine(baseDir, "osx-x64", commandid)
+                };
+            }
+            return osxPath;
+        }
+        else if (RuntimeInformation.IsOSPlatform(OSPlatform.Linux))
+        {
+            return Path.Combine(baseDir, "linux-x64", commandid);
+        }
 
-using (Process? process = Process.Start(startInfo))
-{
-    if (process is not null)
-    {
-        await process.WaitForExitAsync();
-        return process.ExitCode;
+        return commandid;
     }
-    else
+
+    public static int Run(string arguments, out string stdout, out string stderr, string? stdin = null, string? workingDirectory = null)
     {
-        // unable to start process
-        return 1;
+        // This particular case is likely to be the most common and thus
+        // warrants its own specific error message rather than falling
+        // back to a general exception from Process.Start()
+        var fullPath = FindCommand("{ExecutableName}");
+
+        // We can't reference ref or out parameters from within
+        // lambdas (for the thread functions), so we have to store
+        // the data in a temporary variable and then assign these
+        // variables to the out parameters.
+        var stdoutTemp = string.Empty;
+        var stderrTemp = string.Empty;
+
+        var processInfo = new ProcessStartInfo
+        {
+            Arguments = arguments,
+            CreateNoWindow = true,
+            WindowStyle = ProcessWindowStyle.Hidden,
+            ErrorDialog = false,
+            FileName = fullPath,
+            UseShellExecute = false,
+            RedirectStandardOutput = true,
+            RedirectStandardError = true,
+            RedirectStandardInput = true,
+        };
+
+        if (!string.IsNullOrWhiteSpace(workingDirectory))
+        {
+            processInfo.WorkingDirectory = workingDirectory;
+        }
+
+        using var process = new Process();
+        process.StartInfo = processInfo;
+        process.Start();
+
+        // We have to run these in threads, because using ReadToEnd
+        // on one stream can deadlock if the other stream's buffer is
+        // full.
+        var stdoutThread = new Thread(new ThreadStart(() =>
+        {
+            var memory = new MemoryStream();
+            process.StandardOutput.BaseStream.CopyTo(memory);
+            var bytes = new byte[memory.Position];
+            memory.Seek(0, SeekOrigin.Begin);
+            memory.Read(bytes, 0, bytes.Length);
+            stdoutTemp = System.Text.Encoding.ASCII.GetString(bytes);
+        }));
+        var stderrThread = new Thread(new ThreadStart(() =>
+        {
+            var memory = new MemoryStream();
+            process.StandardError.BaseStream.CopyTo(memory);
+            var bytes = new byte[memory.Position];
+            memory.Seek(0, SeekOrigin.Begin);
+            memory.Read(bytes, 0, bytes.Length);
+            stderrTemp = System.Text.Encoding.ASCII.GetString(bytes);
+        }));
+
+        stdoutThread.Start();
+        stderrThread.Start();
+
+        if (stdin != null)
+        {
+            process.StandardInput.Write(System.Text.Encoding.ASCII.GetBytes(stdin));
+        }
+
+        // Make sure interactive prompts don't block.
+        process.StandardInput.Close();
+
+        process.WaitForExit();
+
+        stdoutThread.Join();
+        stderrThread.Join();
+
+        stdout = stdoutTemp;
+        stderr = stderrTemp;
+
+        return process.ExitCode;
     }
 }
