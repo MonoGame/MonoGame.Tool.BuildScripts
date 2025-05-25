@@ -1,9 +1,7 @@
 <Project>
 
-  <ItemGroup>
-    <Content
-      Include="$(MSBuildThisFileDirectory)..\binaries\**\*"
-      CopyToOutputDirectory="PreserveNewest" />
+  <ItemGroup Condition=" '$(DisableMonoGameToolAssets)' != 'True' ">
+    <Content Include="$(MSBuildThisFileDirectory)..\binaries\**\*" CopyToOutputDirectory="PreserveNewest" />
   </ItemGroup>
 
 </Project>
