@@ -18,8 +18,8 @@ public sealed class PackageTask : AsyncFrostingTask<BuildContext>
         if (context.BuildSystem().IsRunningOnGitHubActions)
         {
             string[] requiredRids = context.IsUniversalBinary ?
-                ["windows-x64", "linux-x64", "osx"] :
-                ["windows-x64", "linux-x64", "osx-x64", "osx-arm64"];
+                ["windows-x64", "linux-x64", "linux-arm", "osx"] :
+                ["windows-x64", "linux-x64", "linux-arm", "osx-x64", "osx-arm64"];
 
             foreach (var rid in requiredRids)
             {
@@ -28,7 +28,11 @@ public sealed class PackageTask : AsyncFrostingTask<BuildContext>
                     continue;
 
                 context.CreateDirectory(directoryPath);
-                await context.BuildSystem().GitHubActions.Commands.DownloadArtifact($"artifacts-{rid}", directoryPath);
+                try
+                {
+                    await context.BuildSystem().GitHubActions.Commands.DownloadArtifact($"artifacts-{rid}", directoryPath);
+                }
+                catch { }
             }
         }
         else
@@ -102,24 +106,6 @@ public sealed class PackageTask : AsyncFrostingTask<BuildContext>
 
         // Clean up the temp folder now that we're done
         context.DeleteDirectory(projectDir, new() { Force = true, Recursive = true });
-    }
-
-    private static async Task RunOnGithubAsync(BuildContext context, string projectDir)
-    {
-        // Download remote artifacts from github
-        string[] requiredRids = context.IsUniversalBinary ?
-            ["windows-x64", "linux-x64", "osx" ]:
-            ["windows-x64", "linux-x64", "osx-x64", "osx-arm64"];
-
-        foreach (var rid in requiredRids)
-        {
-            var directoryPath = new DirectoryPath($"{projectDir}/binaries/{rid}");
-            if (context.DirectoryExists(directoryPath))
-                continue;
-
-            context.CreateDirectory(directoryPath);
-            await context.BuildSystem().GitHubActions.Commands.DownloadArtifact($"artifacts-{rid}", directoryPath);
-        }
     }
 
     private static async Task WriteEmbeddedResource(BuildContext context, string resource, string outputPath)
