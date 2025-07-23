@@ -62,8 +62,16 @@ public sealed class TestLinuxTask : FrostingTask<BuildContext>
                 }
                 else
                 {
-                    context.Information($"INVALID: {libPath}");
-                    passedTests = false;
+                    var pathToCheck = System.IO.Path.Combine(context.ArtifactsDir, libPath);
+                    if (!libPath.Contains('/') && File.Exists(pathToCheck))
+                    {
+                        context.Information($"VALID linkage: {libPath}");
+                    }
+                    else
+                    {
+                        context.Information($"INVALID linkage: {libPath}");
+                        passedTests = false;
+                    }
                 }
             }
 

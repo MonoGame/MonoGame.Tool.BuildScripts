@@ -28,7 +28,11 @@ public class {X}
         }
         else if (RuntimeInformation.IsOSPlatform(OSPlatform.Linux))
         {
-            return Path.Combine(baseDir, "linux-x64", commandid);
+            return RuntimeInformation.ProcessArchitecture switch
+            {
+                Architecture.Arm or Architecture.Arm64 => Path.Combine(baseDir, "linux-arm64", commandid),
+                _ => Path.Combine(baseDir, "linux-x64", commandid)
+            };
         }
 
         return commandid;

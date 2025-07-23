@@ -45,8 +45,17 @@ public sealed class TestMacOSTask : FrostingTask<BuildContext>
                 }
                 else
                 {
-                    context.Information($"INVALID linkage: {libPath}");
-                    passedTests = false;
+                    var libName = libPath.Replace("@rpath/", "");
+                    var pathToCheck = System.IO.Path.Combine(context.ArtifactsDir, libName);
+                    if (!libName.Contains('/') && File.Exists(pathToCheck))
+                    {
+                        context.Information($"VALID linkage: {libPath}");
+                    }
+                    else
+                    {
+                        context.Information($"INVALID linkage: {libPath}");
+                        passedTests = false;
+                    }
                 }
             }
 

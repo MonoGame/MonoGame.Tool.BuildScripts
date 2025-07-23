@@ -44,7 +44,11 @@ public sealed class PackageTask : AsyncFrostingTask<BuildContext>
             }
             else if (context.IsRunningOnLinux())
             {
-                rid = "linux-x64";
+                rid = RuntimeInformation.ProcessArchitecture switch
+                {
+                    Architecture.Arm or Architecture.Arm64 => "linux-arm64",
+                    _ => "linux-x64"
+                };
             }
             else if (context.IsRunningOnMacOs())
             {
