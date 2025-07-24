@@ -36,7 +36,7 @@ public sealed class TestLinuxTask : FrostingTask<BuildContext>
     {
         foreach (var dirPath in Directory.GetDirectories(dir))
         {
-            CheckDir(context, dirPath, libSufix);
+            GetValidSufix(context, dirPath, libSufix);
         }
 
         foreach (var filePath in Directory.GetFiles(dir))
