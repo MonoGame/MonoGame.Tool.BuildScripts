@@ -11,28 +11,41 @@ public class {X}
 
         if (RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
         {
-            return Path.Combine(baseDir, "windows-x64", commandid);
+            baseDir = Path.Combine(baseDir, "windows-x64");
         }
         else if (RuntimeInformation.IsOSPlatform(OSPlatform.OSX))
         {
-            var osxPath = Path.Combine(baseDir, "osx", commandid);
+            var osxPath = Path.Combine(baseDir, "osx");
             if (!File.Exists(osxPath))
             {
                 osxPath = RuntimeInformation.ProcessArchitecture switch
                 {
-                    Architecture.Arm or Architecture.Arm64 => Path.Combine(baseDir, "osx-arm64", commandid),
-                    _ => Path.Combine(baseDir, "osx-x64", commandid)
+                    Architecture.Arm or Architecture.Arm64 => Path.Combine(baseDir, "osx-arm64"),
+                    _ => Path.Combine(baseDir, "osx-x64")
                 };
             }
-            return osxPath;
+            baseDir = osxPath;
         }
         else if (RuntimeInformation.IsOSPlatform(OSPlatform.Linux))
         {
-            return RuntimeInformation.ProcessArchitecture switch
+            baseDir = RuntimeInformation.ProcessArchitecture switch
             {
-                Architecture.Arm or Architecture.Arm64 => Path.Combine(baseDir, "linux-arm64", commandid),
-                _ => Path.Combine(baseDir, "linux-x64", commandid)
+                Architecture.Arm or Architecture.Arm64 => Path.Combine(baseDir, "linux-arm64"),
+                _ => Path.Combine(baseDir, "linux-x64")
             };
+        }
+
+        var pathsToCheck = new string[] {
+            Path.Combine(baseDir, commandid),
+            Path.Combine(baseDir, "bin", commandid)
+        };
+
+        foreach(var path in pathsToCheck)
+        {
+            if (File.Exists(path))
+            {
+                return path;
+            }
         }
 
         return commandid;

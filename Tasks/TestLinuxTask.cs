@@ -4,7 +4,7 @@ namespace BuildScripts;
 [TaskName("Test Linux")]
 public sealed class TestLinuxTask : FrostingTask<BuildContext>
 {
-    private static readonly string[] ValidLibs = {
+    private static readonly string[] LibPrefix = {
         "linux-vdso.so",
         "libstdc++.so",
         "libgcc_s.so",
@@ -21,14 +21,38 @@ public sealed class TestLinuxTask : FrostingTask<BuildContext>
 
     public override void Run(BuildContext context)
     {
-        // Ensure there are files to test otherwise this will always pass
-        var files = Directory.GetFiles(context.ArtifactsDir);
-        if (files is null || files.Length == 0)
+        List<string> libSufix = [];
+        GetValidSufix(context, context.ArtifactsDir, libSufix);
+        
+        if (libSufix.Count == 0)
         {
             throw new Exception("There are no files in the artifacts directory to test");
         }
 
-        foreach (var filePath in files)
+        CheckDir(context, context.ArtifactsDir, libSufix);
+    }
+
+    private void GetValidSufix(BuildContext context, string dir, List<string> libSufix)
+    {
+        foreach (var dirPath in Directory.GetDirectories(dir))
+        {
+            CheckDir(context, dirPath, libSufix);
+        }
+
+        foreach (var filePath in Directory.GetFiles(dir))
+        {
+            libSufix.Add(System.IO.Path.GetFileName(filePath));
+        }
+    }
+
+    private void CheckDir(BuildContext context, string dir, List<string> libSufix)
+    {
+        foreach (var dirPath in Directory.GetDirectories(dir))
+        {
+            CheckDir(context, dirPath, libSufix);
+        }
+
+        foreach (var filePath in Directory.GetFiles(dir))
         {
             context.Information($"Checking: {filePath}");
             context.StartProcess(
@@ -47,9 +71,17 @@ public sealed class TestLinuxTask : FrostingTask<BuildContext>
                 var libPath = line.Trim().Split(' ')[0];
 
                 var isValidLib = false;
-                foreach (var validLib in ValidLibs)
+                foreach (var validPrefix in LibPrefix)
                 {
-                    if (libPath.StartsWith(validLib))
+                    if (libPath.StartsWith(validPrefix))
+                    {
+                        isValidLib = true;
+                        break;
+                    }
+                }
+                foreach (var validSufix in libSufix)
+                {
+                    if (libPath.EndsWith(validSufix))
                     {
                         isValidLib = true;
                         break;
@@ -57,22 +89,22 @@ public sealed class TestLinuxTask : FrostingTask<BuildContext>
                 }
 
                 if (isValidLib)
-                {
-                    context.Information($"VALID: {libPath}");
-                }
-                else
-                {
-                    var pathToCheck = System.IO.Path.Combine(context.ArtifactsDir, libPath);
-                    if (!libPath.Contains('/') && File.Exists(pathToCheck))
                     {
-                        context.Information($"VALID linkage: {libPath}");
+                        context.Information($"VALID: {libPath}");
                     }
                     else
                     {
-                        context.Information($"INVALID linkage: {libPath}");
-                        passedTests = false;
+                        var pathToCheck = System.IO.Path.Combine(context.ArtifactsDir, libPath);
+                        if (!libPath.Contains('/') && File.Exists(pathToCheck))
+                        {
+                            context.Information($"VALID linkage: {libPath}");
+                        }
+                        else
+                        {
+                            context.Information($"INVALID linkage: {libPath}");
+                            passedTests = false;
+                        }
                     }
-                }
             }
 
             if (!passedTests)

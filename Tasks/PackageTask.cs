@@ -18,8 +18,8 @@ public sealed class PackageTask : AsyncFrostingTask<BuildContext>
         if (context.BuildSystem().IsRunningOnGitHubActions)
         {
             string[] requiredRids = context.IsUniversalBinary ?
-                ["windows-x64", "linux-x64", "linux-arm", "osx"] :
-                ["windows-x64", "linux-x64", "linux-arm", "osx-x64", "osx-arm64"];
+                ["windows-x64", "linux-x64", "linux-arm64", "osx"] :
+                ["windows-x64", "linux-x64", "linux-arm64", "osx-x64", "osx-arm64"];
 
             foreach (var rid in requiredRids)
             {
