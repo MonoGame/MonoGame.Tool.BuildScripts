@@ -7,49 +7,40 @@ public class {X}
 {
     static string FindCommand(string commandid)
     {
-        var baseDir = Path.GetDirectoryName(typeof({X}).Assembly.Location) ?? "";
-
-        if (RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
+        var dirBase = "windows";
+        if (RuntimeInformation.IsOSPlatform(OSPlatform.OSX))
         {
-            baseDir = Path.Combine(baseDir, "windows-x64");
-        }
-        else if (RuntimeInformation.IsOSPlatform(OSPlatform.OSX))
-        {
-            var osxPath = Path.Combine(baseDir, "osx");
-            if (!File.Exists(osxPath))
-            {
-                osxPath = RuntimeInformation.ProcessArchitecture switch
-                {
-                    Architecture.Arm or Architecture.Arm64 => Path.Combine(baseDir, "osx-arm64"),
-                    _ => Path.Combine(baseDir, "osx-x64")
-                };
-            }
-            baseDir = osxPath;
+            dirBase = "osx";
         }
         else if (RuntimeInformation.IsOSPlatform(OSPlatform.Linux))
         {
-            baseDir = RuntimeInformation.ProcessArchitecture switch
-            {
-                Architecture.Arm or Architecture.Arm64 => Path.Combine(baseDir, "linux-arm64"),
-                _ => Path.Combine(baseDir, "linux-x64")
-            };
+            dirBase = "linux";
         }
 
-        var pathsToCheck = new string[] {
-            Path.Combine(baseDir, commandid),
-            Path.Combine(baseDir, "bin", commandid)
+        var dirsToCheck = new string[] {
+            dirBase,
+            $"{dirBase}-{((RuntimeInformation.ProcessArchitecture == Architecture.Arm || RuntimeInformation.ProcessArchitecture == Architecture.Arm64) ? "arm64" : "x64")}"
+        };
+        
+        var commandsToCheck = new string[] {
+            commandid,
+            Path.Combine("bin", commandid)
         };
 
-        foreach(var path in pathsToCheck)
+        foreach (var dir in dirsToCheck)
         {
-            if (File.Exists(path))
+            foreach (var com in commandsToCheck)
             {
-                return path;
-            }
+                var path = Path.Combine(AppContext.BaseDirectory, dir, com);
+                if (RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
+                {
+                    path += ".exe";
+                }
 
-            if (RuntimeInformation.IsOSPlatform(OSPlatform.Windows) && File.Exists(path + ".exe"))
-            {
-                return path;
+                if (File.Exists(path))
+                {
+                    return path;
+                }
             }
         }
 
