@@ -24,7 +24,7 @@ public sealed class TestWindowsTask : FrostingTask<BuildContext>
         "msvcrt.dll"
     };
 
-    public override bool ShouldRun(BuildContext context) => context.IsRunningOnWindows();
+    public override bool ShouldRun(BuildContext context) => context.IsRunningOnWindows() && !context.ShouldSkipTest;
 
     public override void Run(BuildContext context)
     {

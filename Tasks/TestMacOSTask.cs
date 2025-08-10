@@ -4,7 +4,7 @@ namespace BuildScripts;
 [TaskName("Test macOS")]
 public sealed class TestMacOSTask : FrostingTask<BuildContext>
 {
-    public override bool ShouldRun(BuildContext context) => context.IsRunningOnMacOs();
+    public override bool ShouldRun(BuildContext context) => context.IsRunningOnMacOs() && !context.ShouldSkipTest;
 
     public override void Run(BuildContext context)
     {

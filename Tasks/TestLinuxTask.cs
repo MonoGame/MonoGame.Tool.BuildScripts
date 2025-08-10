@@ -17,7 +17,7 @@ public sealed class TestLinuxTask : FrostingTask<BuildContext>
         "/lib64/ld-linux-"
     };
 
-    public override bool ShouldRun(BuildContext context) => context.IsRunningOnLinux();
+    public override bool ShouldRun(BuildContext context) => context.IsRunningOnLinux() && !context.ShouldSkipTest;
 
     public override void Run(BuildContext context)
     {
