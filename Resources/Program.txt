@@ -46,6 +46,11 @@ public class {X}
             {
                 return path;
             }
+
+            if (RuntimeInformation.IsOSPlatform(OSPlatform.Windows) && File.Exists(path + ".exe"))
+            {
+                return path;
+            }
         }
 
         return commandid;
