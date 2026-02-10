@@ -10,11 +10,19 @@ public sealed class PublishToolTask : AsyncFrostingTask<BuildContext>
     {
         var rid = "";
         if (RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
-            rid = "windows";
+            rid = RuntimeInformation.ProcessArchitecture switch
+            {
+                Architecture.Arm or Architecture.Arm64 => "windows-arm64",
+                _ => "windows-x64",
+            };
         else if (RuntimeInformation.IsOSPlatform(OSPlatform.OSX))
             rid = "osx";
         else
-            rid = "linux";
+            rid = RuntimeInformation.ProcessArchitecture switch
+            {
+                Architecture.Arm or Architecture.Arm64 => "linux-arm64",
+                _ => "linux-x64",
+            };
 
         if (!(RuntimeInformation.IsOSPlatform(OSPlatform.OSX) && context.IsUniversalBinary))
         {
