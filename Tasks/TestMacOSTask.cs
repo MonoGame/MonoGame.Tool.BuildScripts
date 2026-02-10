@@ -41,6 +41,7 @@ public sealed class TestMacOSTask : FrostingTask<BuildContext>
 
         foreach (var filePath in Directory.GetFiles(dir))
         {
+            if (filePath.Contains(".DS_Store")) continue;
             context.Information($"Checking: {filePath}");
             context.StartProcess(
                 "dyld_info",
