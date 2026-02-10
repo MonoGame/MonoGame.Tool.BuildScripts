@@ -28,6 +28,20 @@ public sealed class PublishToolTask : AsyncFrostingTask<BuildContext>
         var copyToDir = $"artifacts-{rid}";
         if (context.BuildSystem().IsRunningOnGitHubActions)
         {
+            if (RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
+            {
+                // we need to upload each rid of windows separately.
+                var directories = Directory.GetDirectories(context.ArtifactsDir, "windows-*");
+                if (directories.Any())
+                {
+                    foreach (var dir in directories)
+                    {
+                        var dirName = new DirectoryInfo(dir).Name;
+                        await context.BuildSystem().GitHubActions.Commands.UploadArtifact(DirectoryPath.FromString(dir), dirName);
+                    }
+                    return;
+                }
+            }
             await context.BuildSystem().GitHubActions.Commands.UploadArtifact(DirectoryPath.FromString(context.ArtifactsDir), copyToDir);
         }
         else
