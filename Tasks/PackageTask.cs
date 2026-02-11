@@ -17,9 +17,10 @@ public sealed class PackageTask : AsyncFrostingTask<BuildContext>
         // local artifacts so we can test/run this locally as well
         if (context.BuildSystem().IsRunningOnGitHubActions)
         {
+            context.Information("Running on github actions, attempting to download artifacts from previous publish step");
             string[] requiredRids = context.IsUniversalBinary ?
-                ["windows-x64", "linux-x64", "linux-arm64", "osx"] :
-                ["windows-x64", "linux-x64", "linux-arm64", "osx-x64", "osx-arm64"];
+                ["windows-x64", "windows-arm64", "linux-x64", "linux-arm64", "osx"] :
+                ["windows-x64", "windows-arm64", "linux-x64", "linux-arm64", "osx-x64", "osx-arm64"];
 
             foreach (var rid in requiredRids)
             {
@@ -27,20 +28,29 @@ public sealed class PackageTask : AsyncFrostingTask<BuildContext>
                 if (context.DirectoryExists(directoryPath))
                     continue;
 
+                context.Information($"Attempting to download artifacts for {rid} to {directoryPath}");
                 context.CreateDirectory(directoryPath);
                 try
                 {
                     await context.BuildSystem().GitHubActions.Commands.DownloadArtifact($"artifacts-{rid}", directoryPath);
                 }
-                catch { }
+                catch (Exception ex)
+                {
+                    context.Warning($"Failed to download artifacts for {rid}, exception: {ex}");
+                }
             }
         }
         else
         {
+            context.Information("Not running on github actions, copying local artifacts");
             string rid = string.Empty;
             if (context.IsRunningOnWindows())
             {
-                rid = "windows-x64";
+                rid = RuntimeInformation.ProcessArchitecture switch
+                {
+                    Architecture.Arm or Architecture.Arm64 => "windows-arm64",
+                    _ => "windows-x64"
+                };
             }
             else if (context.IsRunningOnLinux())
             {
