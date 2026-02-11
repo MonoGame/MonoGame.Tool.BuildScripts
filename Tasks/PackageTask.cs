@@ -39,14 +39,6 @@ public sealed class PackageTask : AsyncFrostingTask<BuildContext>
                     context.Warning($"Failed to download artifacts for {rid}, exception: {ex}");
                 }
             }
-            foreach (var dir in context.GetDirectories($"{projectDir}/binaries/*"))
-            {
-                context.Information($"Contents of {dir}:");
-                foreach (var file in context.GetFiles($"{dir}/**/*"))
-                {
-                    context.Information($" - {file}");
-                }
-            }
         }
         else
         {
