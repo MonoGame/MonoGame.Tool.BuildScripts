@@ -37,7 +37,7 @@ public sealed class PublishToolTask : AsyncFrostingTask<BuildContext>
                     foreach (var dir in directories)
                     {
                         var dirName = new DirectoryInfo(dir).Name;
-                        await context.BuildSystem().GitHubActions.Commands.UploadArtifact(DirectoryPath.FromString(dir), dirName);
+                        await context.BuildSystem().GitHubActions.Commands.UploadArtifact(DirectoryPath.FromString(dir), $"artifacts-{dirName}");
                     }
                     return;
                 }
