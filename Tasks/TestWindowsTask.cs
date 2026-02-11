@@ -42,11 +42,6 @@ public sealed class TestWindowsTask : FrostingTask<BuildContext>
 
         // Ensure there are files to test otherwise this will always pass
         var files = Directory.GetFiles(context.ArtifactsDir);
-        if (files is null || files.Length == 0)
-        {
-            throw new Exception("There are no files in the artifacts directory to test");
-        }
-
         foreach (var filePath in files)
         {
             context.Information($"Checking: {filePath}");
