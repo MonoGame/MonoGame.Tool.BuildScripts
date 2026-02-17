@@ -41,7 +41,7 @@ public sealed class TestWindowsTask : FrostingTask<BuildContext>
         }
 
         // Ensure there are files to test otherwise this will always pass
-        var files = Directory.GetFiles(context.ArtifactsDir);
+        var files = Directory.GetFiles(dir);
         foreach (var filePath in files)
         {
             context.Information($"Checking: {filePath}");
