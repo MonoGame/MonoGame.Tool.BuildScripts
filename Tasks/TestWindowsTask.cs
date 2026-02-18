@@ -24,6 +24,23 @@ public sealed class TestWindowsTask : FrostingTask<BuildContext>
         "msvcrt.dll"
     };
 
+    // We need these when building for ARM64 they are part of the OS
+    private static readonly string[] ValidURCTLibs = {
+        "api-ms-win-crt-private-l1-1-0.dll",
+        "api-ms-win-crt-stdio-l1-1-0.dll",
+        "api-ms-win-crt-runtime-l1-1-0.dll",
+        "api-ms-win-crt-environment-l1-1-0.dll",
+        "api-ms-win-crt-time-l1-1-0.dll",
+        "api-ms-win-crt-convert-l1-1-0.dll",
+        "api-ms-win-crt-math-l1-1-0.dll",
+        "api-ms-win-crt-heap-l1-1-0.dll",
+        "api-ms-win-crt-string-l1-1-0.dll",
+        "api-ms-win-crt-utility-l1-1-0.dll",
+        "api-ms-win-crt-filesystem-l1-1-0.dll",
+        "api-ms-win-crt-conio-l1-1-0.dll",
+        "api-ms-win-crt-locale-l1-1-0.dll",
+    };
+
     public override bool ShouldRun(BuildContext context) => context.IsRunningOnWindows() && !context.ShouldSkipTest;
 
     public override void Run(BuildContext context)
@@ -62,7 +79,7 @@ public sealed class TestWindowsTask : FrostingTask<BuildContext>
                 if (!libPath.EndsWith(".dll") || libPath.Contains(' '))
                     continue;
 
-                if (ValidLibs.Contains(libPath))
+                if (ValidLibs.Contains(libPath) || ValidURCTLibs.Contains(libPath))
                 {
                     context.Information($"VALID: {libPath}");
                 }
