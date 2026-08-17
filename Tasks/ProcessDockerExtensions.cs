@@ -44,9 +44,16 @@ public static class ProcessDockerExtensions
             }
             args.Prepend(command);
             args.Prepend(RuntimeInformation.ProcessArchitecture == Architecture.Arm64 ? DOCKERIMAGE_ARM64 : DOCKERIMAGE_X64);
-            args.Prepend(workdir);
+            foreach (var environmentVariable in envVariables)
+            {
+                args.PrependSwitchQuoted(
+                    "--env",
+                    " ",
+                    $"{environmentVariable.Key}={environmentVariable.Value}");
+            }
+            args.PrependQuoted(workdir);
             args.Prepend("-w");
-            args.Prepend($"{System.IO.Path.GetFullPath(".")}:/src");
+            args.PrependQuoted($"{System.IO.Path.GetFullPath(".")}:/src");
             args.Prepend("-v");
             args.Prepend("run");
             command = "docker";
@@ -55,7 +62,7 @@ public static class ProcessDockerExtensions
             Arguments = args,
             WorkingDirectory = workingDirectory,
             NoWorkingDirectory = useDocker,
-            EnvironmentVariables = envVariables,
+            EnvironmentVariables = useDocker ? null : envVariables,
         };
         return context.StartProcess(command, settings);
     }
@@ -65,7 +72,9 @@ public static class ProcessDockerExtensions
         var useDocker = UseDocker(context);
         if (useDocker)
         {
-            return directoryPath;
+            var path = System.IO.Path.GetFullPath(directoryPath.FullPath);
+            var relativePath = System.IO.Path.GetRelativePath(System.IO.Path.GetFullPath("."), path);
+            return new DirectoryPath($"/src/{relativePath}");
         }
         return context.MakeAbsolute(directoryPath);
     }
