@@ -63,6 +63,10 @@ public sealed class TestMacOSTask : FrostingTask<BuildContext>
                     i += 2;
                     continue;
                 }
+                if (libPath.Contains("-rpaths:") || libPath.Equals(".", StringComparison.OrdinalIgnoreCase))
+                {
+                    continue;
+                }
 
                 bool isValidLib = false;
                 foreach (var validSufix in libSufix)
