@@ -44,12 +44,15 @@ public static class ProcessDockerExtensions
             }
             args.Prepend(command);
             args.Prepend(RuntimeInformation.ProcessArchitecture == Architecture.Arm64 ? DOCKERIMAGE_ARM64 : DOCKERIMAGE_X64);
-            foreach (var environmentVariable in envVariables)
+            if (envVariables is not null)
             {
-                args.PrependSwitchQuoted(
-                    "--env",
-                    " ",
-                    $"{environmentVariable.Key}={environmentVariable.Value}");
+                foreach (var environmentVariable in envVariables)
+                {
+                    args.PrependSwitchQuoted(
+                        "--env",
+                        " ",
+                        $"{environmentVariable.Key}={environmentVariable.Value}");
+                }
             }
             args.PrependQuoted(workdir);
             args.Prepend("-w");
