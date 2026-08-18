@@ -63,7 +63,7 @@ public sealed class TestMacOSTask : FrostingTask<BuildContext>
                     i += 2;
                     continue;
                 }
-                if (libPath.Contains("-rpaths:") || libPath.Equals(".", StringComparison.OrdinalIgnoreCase))
+                if (libPath.StartsWith("-rpaths:") || libPath.StartsWith("@executable_path") || libPath.Equals(".", StringComparison.OrdinalIgnoreCase))
                 {
                     continue;
                 }
