@@ -1,7 +1,17 @@
 <Project>
 
+  <PropertyGroup>
+    <_MonoGameToolArch Condition="$([System.Runtime.InteropServices.RuntimeInformation]::ProcessArchitecture.ToString()) == 'Arm64'">arm64</_MonoGameToolArch>
+    <_MonoGameToolArch Condition="'$(_MonoGameToolArch)' == ''">x64</_MonoGameToolArch>
+    <_MonoGameToolFolder Condition="$([MSBuild]::IsOSPlatform('Linux'))">linux-$(_MonoGameToolArch)</_MonoGameToolFolder>
+    <_MonoGameToolFolder Condition="$([MSBuild]::IsOSPlatform('OSX'))">osx</_MonoGameToolFolder>
+    <_MonoGameToolFolder Condition="'$(_MonoGameToolFolder)' == ''">windows-$(_MonoGameToolArch)</_MonoGameToolFolder>
+  </PropertyGroup>
+
   <ItemGroup Condition=" '$(DisableMonoGameToolAssets)' != 'True' ">
-    <Content Include="$(MSBuildThisFileDirectory)..\binaries\**\*" CopyToOutputDirectory="PreserveNewest" />
+    <Content Include="$(MSBuildThisFileDirectory)..\binaries\$(_MonoGameToolFolder)\**\*"
+      Link="$(_MonoGameToolFolder)\%(RecursiveDir)%(Filename)%(Extension)"
+      CopyToOutputDirectory="PreserveNewest" />
   </ItemGroup>
 
 </Project>
