@@ -13,7 +13,8 @@ public static class FrostingContextExtensions
         for(int i = 0; i < env.Length; i+= 2)
         {
             string key = env[i];
-            string value = $"'{env[i + 1]}'";
+            string value = env[i + 1];
+            value = $"'{value.Replace("'", "'\\''").Replace(" ", "'\\ '")}'";
             _environmentVariables += $"export {key}={value};"; 
         }
     }
