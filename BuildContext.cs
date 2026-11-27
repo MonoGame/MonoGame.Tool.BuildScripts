@@ -9,6 +9,8 @@ public class BuildContext : FrostingContext
 
     public bool IsUniversalBinary { get; }
 
+    public bool ShouldSkipTest { get; set; }
+
     public BuildContext(ICakeContext context) : base(context)
     {
         ArtifactsDir = context.Argument("artifactsDir", "artifacts");

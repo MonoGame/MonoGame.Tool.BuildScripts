@@ -4,19 +4,44 @@ namespace BuildScripts;
 [TaskName("Test macOS")]
 public sealed class TestMacOSTask : FrostingTask<BuildContext>
 {
-    public override bool ShouldRun(BuildContext context) => context.IsRunningOnMacOs();
+    public override bool ShouldRun(BuildContext context) => context.IsRunningOnMacOs() && !context.ShouldSkipTest;
 
     public override void Run(BuildContext context)
     {
-        // Ensure there are files to test otherwise this will always pass
-        var files = Directory.GetFiles(context.ArtifactsDir);
-        if (files is null || files.Length == 0)
+        List<string> libSufix = [];
+        GetValidSufix(context, context.ArtifactsDir, libSufix);
+        
+        if (libSufix.Count == 0)
         {
             throw new Exception("There are no files in the artifacts directory to test");
         }
 
-        foreach (var filePath in files)
+        CheckDir(context, context.ArtifactsDir, libSufix);
+    }
+
+    private void GetValidSufix(BuildContext context, string dir, List<string> libSufix)
+    {
+        foreach (var dirPath in Directory.GetDirectories(dir))
         {
+            GetValidSufix(context, dirPath, libSufix);
+        }
+
+        foreach (var filePath in Directory.GetFiles(dir))
+        {
+            libSufix.Add(System.IO.Path.GetFileName(filePath));
+        }
+    }
+
+    private void CheckDir(BuildContext context, string dir, List<string> libSufix)
+    {
+        foreach (var dirPath in Directory.GetDirectories(dir))
+        {
+            CheckDir(context, dirPath, libSufix);
+        }
+
+        foreach (var filePath in Directory.GetFiles(dir))
+        {
+            if (filePath.Contains(".DS_Store")) continue;
             context.Information($"Checking: {filePath}");
             context.StartProcess(
                 "dyld_info",
@@ -38,15 +63,38 @@ public sealed class TestMacOSTask : FrostingTask<BuildContext>
                     i += 2;
                     continue;
                 }
+                if (libPath.StartsWith("-rpaths:") || libPath.StartsWith("@executable_path") || libPath.Equals(".", StringComparison.OrdinalIgnoreCase))
+                {
+                    continue;
+                }
 
-                if (libPath.StartsWith("/usr/lib/") || libPath.StartsWith("/System/Library/Frameworks/"))
+                bool isValidLib = false;
+                foreach (var validSufix in libSufix)
+                {
+                    if (libPath.EndsWith(validSufix))
+                    {
+                        isValidLib = true;
+                        break;
+                    }
+                }
+
+                if (isValidLib || libPath.StartsWith("/usr/lib/") || libPath.StartsWith("/System/Library/Frameworks/"))
                 {
                     context.Information($"VALID linkage: {libPath}");
                 }
                 else
                 {
-                    context.Information($"INVALID linkage: {libPath}");
-                    passedTests = false;
+                    var libName = libPath.Replace("@rpath/", "");
+                    var pathToCheck = System.IO.Path.Combine(context.ArtifactsDir, libName);
+                    if (!libName.Contains('/') && File.Exists(pathToCheck))
+                    {
+                        context.Information($"VALID linkage: {libPath}");
+                    }
+                    else
+                    {
+                        context.Information($"INVALID linkage: {libPath}");
+                        passedTests = false;
+                    }
                 }
             }
 

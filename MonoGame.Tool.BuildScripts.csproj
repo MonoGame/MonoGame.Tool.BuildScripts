@@ -9,19 +9,9 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <EmbeddedResource Include="Resources/Icon.png">
+    <EmbeddedResource Include="Resources/*">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-      <LogicalName>Icon.png</LogicalName>
-    </EmbeddedResource>
-
-    <EmbeddedResource Include="Resources/MonoGame.Tool.X.txt">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-      <LogicalName>MonoGame.Tool.X.txt</LogicalName>
-    </EmbeddedResource>
-
-    <EmbeddedResource Include="Resources/Program.txt">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-      <LogicalName>Program.txt</LogicalName>
+      <LogicalName>%(Filename)%(Extension)</LogicalName>
     </EmbeddedResource>
   </ItemGroup>
 
@@ -41,8 +31,10 @@
   </ItemGroup>
 
   <ItemGroup>
-    <PackageReference Include="Cake.FileHelpers" Version="6.1.3" />
-    <PackageReference Include="Cake.Frosting" Version="3.1.0" />
+    <PackageReference Include="Cake.FileHelpers" Version="7.0.0" />
+    <PackageReference Include="Cake.Frosting" Version="6.1.0" />
+    <PackageReference Include="NuGet.Packaging" Version="7.3.1" />
+    <PackageReference Include="System.Formats.Asn1" Version="10.0.6" />
   </ItemGroup>
 
 </Project>

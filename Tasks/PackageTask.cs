@@ -1,12 +1,12 @@
-
 using System.Runtime.InteropServices;
 using Cake.Common.Tools.DotNet.NuGet.Push;
 
 namespace BuildScripts;
 
 [TaskName("Package")]
-public sealed class PublishPackageTask : AsyncFrostingTask<BuildContext>
+public sealed class PackageTask : AsyncFrostingTask<BuildContext>
 {
+
     public override async Task RunAsync(BuildContext context)
     {
         // Create a temporary directory tha we can use to build the "project" in that we'll pack into a dotnet tool
@@ -17,9 +17,10 @@ public sealed class PublishPackageTask : AsyncFrostingTask<BuildContext>
         // local artifacts so we can test/run this locally as well
         if (context.BuildSystem().IsRunningOnGitHubActions)
         {
-            var requiredRids = context.IsUniversalBinary ?
-                new string[] { "windows-x64", "linux-x64", "osx" } :
-                new string[] { "windows-x64", "linux-x64", "osx-x64", "osx-arm64" };
+            context.Information("Running on github actions, attempting to download artifacts from previous publish step");
+            string[] requiredRids = context.IsUniversalBinary ?
+                ["windows-x64", "windows-arm64", "linux-x64", "linux-arm64", "osx"] :
+                ["windows-x64", "windows-arm64", "linux-x64", "linux-arm64", "osx-x64", "osx-arm64"];
 
             foreach (var rid in requiredRids)
             {
@@ -27,20 +28,37 @@ public sealed class PublishPackageTask : AsyncFrostingTask<BuildContext>
                 if (context.DirectoryExists(directoryPath))
                     continue;
 
+                context.Information($"Attempting to download artifacts for {rid} to {directoryPath}");
                 context.CreateDirectory(directoryPath);
-                await context.BuildSystem().GitHubActions.Commands.DownloadArtifact($"artifacts-{rid}", directoryPath);
+                try
+                {
+                    await context.BuildSystem().GitHubActions.Commands.DownloadArtifact($"artifacts-{rid}", directoryPath);
+                }
+                catch (Exception ex)
+                {
+                    context.Warning($"Failed to download artifacts for {rid}, exception: {ex}");
+                }
             }
         }
         else
         {
+            context.Information("Not running on github actions, copying local artifacts");
             string rid = string.Empty;
             if (context.IsRunningOnWindows())
             {
-                rid = "windows-x64";
+                rid = RuntimeInformation.ProcessArchitecture switch
+                {
+                    Architecture.Arm or Architecture.Arm64 => "windows-arm64",
+                    _ => "windows-x64"
+                };
             }
             else if (context.IsRunningOnLinux())
             {
-                rid = "linux-x64";
+                rid = RuntimeInformation.ProcessArchitecture switch
+                {
+                    Architecture.Arm or Architecture.Arm64 => "linux-arm64",
+                    _ => "linux-x64"
+                };
             }
             else if (context.IsRunningOnMacOs())
             {
@@ -57,28 +75,14 @@ public sealed class PublishPackageTask : AsyncFrostingTask<BuildContext>
         }
 
         // Create the temporary project that we'll use to pack into the dotnet tool
-        var licensePath = context.PackContext.LicensePath;
-        var licenseName = "LICENSE";
+        var projectPath = $"{projectDir}/MonoGame.Tool.{context.PackContext.ToolName}.csproj";
+        await WriteEmbeddedResource(context, "MonoGame.Tool.X.txt", projectPath);
+        await WriteEmbeddedResource(context, "MonoGame.Tool.X.targets", $"{projectDir}/MonoGame.Tool.{context.PackContext.ToolName}.targets");
+        await WriteEmbeddedResource(context, "Program.txt", $"{projectDir}/Program.cs");
 
-        if (licensePath.EndsWith(".txt")) licenseName += ".txt";
-        else if (licensePath.EndsWith(".md")) licenseName += ".md";
-
-        var contentInclude = $"<Content Include=\"binaries\\**\\*\" CopyToOutputDirectory=\"PreserveNewest\" />";
-
-        var projectData = await ReadEmbeddedResourceAsync("MonoGame.Tool.X.txt");
-        projectData = projectData.Replace("{X}", context.PackContext.ToolName)
-                                 .Replace("{CommandName}", context.PackContext.CommandName)
-                                 .Replace("{LicensePath}", context.PackContext.LicensePath)
-                                 .Replace("{LicenseName}", licenseName)
-                                 .Replace("{ContentInclude}", contentInclude);
-
-        string projectPath = $"{projectDir}/MonoGame.Tool.{context.PackContext.ToolName}.csproj";
-        await File.WriteAllTextAsync(projectPath, projectData);
-
-        var programData = await ReadEmbeddedResourceAsync("Program.txt");
-        programData = programData.Replace("{ExecutableName}", context.PackContext.ExecutableName);
-        var programPath = $"{projectDir}/Program.cs";
-        await File.WriteAllTextAsync(programPath, programData);
+        var readMeName = "README.md";
+        var readMePath = $"{projectDir}/{readMeName}";
+        await File.WriteAllTextAsync(readMePath, context.PackContext.Description);
 
         await SaveEmbeddedResourceAsync("Icon.png", $"{projectDir}/Icon.png");
 
@@ -91,14 +95,15 @@ public sealed class PublishPackageTask : AsyncFrostingTask<BuildContext>
         {
             MSBuildSettings = dnMsBuildSettings,
             Verbosity = DotNetVerbosity.Minimal,
-            Configuration = "Release"
+            Configuration = "Release",
+            OutputDirectory = context.ArtifactsDir
         });
 
         // When running on a github runner, upload the dotnet tool nupkg to github otherwise just copy it to the
         // artifacts directory for local testing.
         if (context.BuildSystem().IsRunningOnGitHubActions)
         {
-            foreach (var nugetPath in context.GetFiles($"{projectDir}/**/*.nupkg"))
+            foreach (var nugetPath in context.GetFiles($"{context.ArtifactsDir}/**/*.nupkg"))
             {
                 await context.BuildSystem().GitHubActions.Commands.UploadArtifact(nugetPath, nugetPath.GetFilename().ToString());
 
@@ -112,38 +117,31 @@ public sealed class PublishPackageTask : AsyncFrostingTask<BuildContext>
                 }
             }
         }
-        else
-        {
-            context.CopyFiles($"{projectDir}/**/*.nupkg", context.ArtifactsDir);
-        }
 
         // Clean up the temp folder now that we're done
         context.DeleteDirectory(projectDir, new() { Force = true, Recursive = true });
     }
 
-    private static async Task RunOnGithubAsync(BuildContext context, string projectDir)
+    private static async Task WriteEmbeddedResource(BuildContext context, string resource, string outputPath)
     {
-        // Download remote artifacts from github
-        var requiredRids = context.IsUniversalBinary ?
-            new string[] { "windows-x64", "linux-x64", "osx" } :
-            new string[] { "windows-x64", "linux-x64", "osx-x64", "osx-arm64" };
-
-        foreach (var rid in requiredRids)
+        var licenseName = System.IO.Path.GetExtension(context.PackContext.LicensePath) switch
         {
-            var directoryPath = new DirectoryPath($"{projectDir}/binaries/{rid}");
-            if (context.DirectoryExists(directoryPath))
-                continue;
-
-            context.CreateDirectory(directoryPath);
-            await context.BuildSystem().GitHubActions.Commands.DownloadArtifact($"artifacts-{rid}", directoryPath);
-        }
-    }
-
-    private static async Task<string> ReadEmbeddedResourceAsync(string resourceName)
-    {
-        await using var stream = typeof(PublishPackageTask).Assembly.GetManifestResourceStream(resourceName)!;
+            ".txt" => "LICENSE.txt",
+            ".md" => "LICENSE.md",
+            _ => "LICENSE"
+        };
+        var contentInclude = $"<None Include=\"binaries\\**\\*\" CopyToOutputDirectory=\"PreserveNewest\" />";
+        await using var stream = typeof(PackageTask).Assembly.GetManifestResourceStream(resource)!;
         using var reader = new StreamReader(stream);
-        return await reader.ReadToEndAsync();
+        var outputData = (await reader.ReadToEndAsync())
+            .Replace("{X}", context.PackContext.ToolName)
+            .Replace("{x}", context.PackContext.ToolName.ToLower())
+            .Replace("{ExecutableName}", context.PackContext.ExecutableName)
+            .Replace("{Description}", context.PackContext.Description)
+            .Replace("{LicensePath}", context.PackContext.LicensePath)
+            .Replace("{LicenseName}", licenseName)
+            .Replace("{ContentInclude}", contentInclude);
+        await File.WriteAllTextAsync(outputPath, outputData);
     }
 
     private static async Task SaveEmbeddedResourceAsync(string resourceName, string outPath)
@@ -151,7 +149,7 @@ public sealed class PublishPackageTask : AsyncFrostingTask<BuildContext>
         if (File.Exists(outPath))
             File.Delete(outPath);
 
-        await using var stream = typeof(PublishPackageTask).Assembly.GetManifestResourceStream(resourceName)!;
+        await using var stream = typeof(PackageTask).Assembly.GetManifestResourceStream(resourceName)!;
         await using var writer = File.Create(outPath);
         await stream.CopyToAsync(writer);
         writer.Close();

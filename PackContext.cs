@@ -7,7 +7,7 @@ public class PackContext
 {
     public string ToolName { get; }
 
-    public string CommandName { get; }
+    public string Description { get; }
 
     public string ExecutableName { get; }
 
@@ -24,10 +24,11 @@ public class PackContext
     public PackContext(ICakeContext context)
     {
         ToolName = context.Argument("toolname", "X");
-        CommandName = context.Argument("commandname", "X");
+        ToolName = char.ToUpper(ToolName[0]) + ToolName[1..];
         ExecutableName = context.Argument("executablename", "X");
         LicensePath = context.Argument("licensepath", "");
         Version = context.Argument("version", "1.0.0");
+        Description = $"This package contains executables for {ToolName} built for usage with MonoGame.";
         RepositoryUrl = "X";
         IsTag = false;
 
